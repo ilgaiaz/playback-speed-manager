@@ -24,7 +24,16 @@ INSTALLATION directory:
 
 config={}
 config.TIME={} -- subtable reserved for TIME extension
+--Load subs variables
+subtitles_uri = nil -- "file:///D:/films/subtitles.srt"
+charset = "Windows-1250" -- nil or "UTF-8", "ISO-8859-2", ...
+filename_extension = "srt" -- "eng.srt", "srt-vlc", ...
+--Speed variables
+rate = 4.0
+slowSpeed = 1.0/rate
+normalSpeed = 1.0
 
+--**********************LOAD SUBS****************************
 function Load_subtitles()
 	if subtitles_uri==nil then subtitles_uri=media_path(filename_extension) end
 -- read file
@@ -49,13 +58,75 @@ function Load_subtitles()
         --che poi posso riutilizzare dopo
 		table.insert(subtitles,{format_time(h1, m1, s1, ms1), format_time(h2, m2, s2, ms2), text})
 	end
-	if #subtitles~=0 then return true else return false end
+	--Per ora commento tanto non serve e vediamo se funziona
+	--if #subtitles~=0 then return true else return false end
 end
 
 function format_time(h,m,s,ms) -- time to seconds
 	return tonumber(h)*3600+tonumber(m)*60+tonumber(s) -- +tonumber("."..ms)
 end
 
+function media_path(extension)
+	local media_uri = vlc.input.item():uri()
+	media_uri = string.gsub(media_uri, "^(.*)%..-$","%1") .. "." .. extension
+	vlc.msg.info(media_uri)
+	return media_uri
+end
+
+--***************************ENDOF LOAD SUBS*********************************
+        
+        
+--******************************SLOWSPEED************************************
+function pause_detection()
+    local currentSpeed = vlc.var.get(vlc.object.input(),"rate")
+    --vlc.msg.dbg("Current speed: " .. currentSpeed)
+    local playing = true
+    actual_time = Get_elapsed()
+    --local input = vlc.object.input()
+
+    --vlc.msg.dbg("Current speed" .. currentSpeed)
+    --vlc.msg.dbg("Begin loop")
+    for i, mySub in pairs(subtitles) do
+        vlc.msg.dbg("In the for bitch")
+        if actual_time>=mySub[1] and actual_time<=mySub[2] then
+            --vlc.osd.message(mySub[3],channel1,osd_position,5000000)
+            --reduce speed video
+            --vlc.msg.dbg("ACTUAL: " .. actual_time)
+            --vlc.msg.dbg("TIME: " .. mySub[1])
+            vlc.var.set(input, "rate", slowSpeed)
+            vlc.msg.dbg(string.format("DENTRO AL IF"))
+            vlc.msg.dbg(string.format("Elapsed = %d", elapsed))
+            --vlc.playlist.pause()
+            --sleep(0.3)
+            --vlc.playlist.play()
+            currentSpeed = vlc.var.get(vlc.object.input(),"rate")
+            return
+        elseif currentSpeed ~= normalSpeed then
+            vlc.var.set(input, "rate", normalSpeed)
+            currentSpeed = vlc.var.get(vlc.object.input(),"rate")
+        end
+    end
+    --vlc.msg.dbg("End loop")
+end
+
+function Get_elapsed()
+    local input = vlc.object.input()
+    local elapsed_time = vlc.var.get(input, "time")
+--     local elapsedHour = math.floor(elapsed_time / 3600)
+--     local elapsedMinute = math.floor((elapsed_time % 3600) / 60)
+--     local elapsedSecond = elapsed_time % 60
+--
+--     local elapsed_tot = elapsedHour + elapsedMinute + elapsedSecond
+    local elapsed_tot = math.floor(elapsed_time/1000000)
+
+    --vlc.msg.dbg("ELAPSED2_" .. elapsed_tot)
+
+    return elapsed_tot
+end
+--*****************************ENDOF SLOWSPEED*********************************
+        
+        
+--*********************************LOOPER**************************************
 function Looper()
 	local curi=nil
 	local loops=0 -- counter of loops
@@ -82,7 +153,9 @@ function Looper()
 				curi=uri
 				Log(curi)
 			else -- current input
-				if not config.TIME or config.TIME.stop~=true then TIME_Loop() end
+				if not config.TIME or config.TIME.stop~=true then 
+                    pause_detection()
+                end
 				if vlc.playlist.status()=="playing" then
 					--Log("playing")
 				elseif vlc.playlist.status()=="paused" then
@@ -198,5 +271,9 @@ function TIME_Decode_time_format()
 end
 
 --- XXX --- TIME ---
+while vlc.playlist.status() == "stopped" do
+    Sleep(1)
+end
 
+Load_subtitles()
 Looper()
