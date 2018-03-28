@@ -29,7 +29,7 @@ subtitles_uri = nil -- "file:///D:/films/subtitles.srt"
 charset = "Windows-1250" -- nil or "UTF-8", "ISO-8859-2", ...
 filename_extension = "srt" -- "eng.srt", "srt-vlc", ...
 --Speed variables
-rate = 4.0
+rate = 1.5
 slowSpeed = 1.0/rate
 normalSpeed = 1.0
 
@@ -77,33 +77,18 @@ end
         
         
 --******************************SLOWSPEED************************************
-function pause_detection()
-    local currentSpeed = vlc.var.get(vlc.object.input(),"rate")
-    --vlc.msg.dbg("Current speed: " .. currentSpeed)
-    local playing = true
+function Pause_detection()
+    local input = vlc.object.input()
+    local currentSpeed = vlc.var.get(input,"rate")
     actual_time = Get_elapsed()
-    --local input = vlc.object.input()
-
-    --vlc.msg.dbg("Current speed" .. currentSpeed)
-    --vlc.msg.dbg("Begin loop")
+    vlc.msg.dbg("Current rate: "..vlc.var.get(input,"rate"))
     for i, mySub in pairs(subtitles) do
-        vlc.msg.dbg("In the for bitch")
         if actual_time>=mySub[1] and actual_time<=mySub[2] then
-            --vlc.osd.message(mySub[3],channel1,osd_position,5000000)
-            --reduce speed video
-            --vlc.msg.dbg("ACTUAL: " .. actual_time)
-            --vlc.msg.dbg("TIME: " .. mySub[1])
             vlc.var.set(input, "rate", slowSpeed)
-            vlc.msg.dbg(string.format("DENTRO AL IF"))
-            vlc.msg.dbg(string.format("Elapsed = %d", elapsed))
-            --vlc.playlist.pause()
-            --sleep(0.3)
-            --vlc.playlist.play()
-            currentSpeed = vlc.var.get(vlc.object.input(),"rate")
             return
         elseif currentSpeed ~= normalSpeed then
             vlc.var.set(input, "rate", normalSpeed)
-            currentSpeed = vlc.var.get(vlc.object.input(),"rate")
+            currentSpeed = vlc.var.get(input,"rate")
         end
     end
     --vlc.msg.dbg("End loop")
@@ -112,16 +97,8 @@ end
 function Get_elapsed()
     local input = vlc.object.input()
     local elapsed_time = vlc.var.get(input, "time")
---     local elapsedHour = math.floor(elapsed_time / 3600)
---     local elapsedMinute = math.floor((elapsed_time % 3600) / 60)
---     local elapsedSecond = elapsed_time % 60
---
---     local elapsed_tot = elapsedHour + elapsedMinute + elapsedSecond
-    local elapsed_tot = math.floor(elapsed_time/1000000)
 
-    --vlc.msg.dbg("ELAPSED2_" .. elapsed_tot)
-
-    return elapsed_tot
+    return elapsed_time
 end
 --*****************************ENDOF SLOWSPEED*********************************
         
@@ -154,7 +131,7 @@ function Looper()
 				Log(curi)
 			else -- current input
 				if not config.TIME or config.TIME.stop~=true then 
-                    pause_detection()
+                    Pause_detection()
                 end
 				if vlc.playlist.status()=="playing" then
 					--Log("playing")
@@ -185,94 +162,9 @@ function Get_config()
 	assert(loadstring(s))() -- global var
 end
 
---- TIME ---
-
-TIME_time_format = "[E] / [D][_]([T])"
-TIME_osd_position = "top-right"
-
-function TIME_Loop()
-	if config.TIME then
-		TIME_time_format = config.TIME.time_format or TIME_time_format
-		TIME_osd_position = config.TIME.osd_position or TIME_osd_position
-	end
-	local osd_output = TIME_Decode_time_format()
-	vlc.osd.message(osd_output, 1111111111, TIME_osd_position)
-end
-
-function TIME_Decode_time_format()
--- TODO: rewrite/improve this old code; autoformat (s > m:s > h:m:s);
-	local input = vlc.object.input()
-
-	local elapsed_time = vlc.var.get(input, "time")/1000000
-	--local duration = vlc.var.get(input, "length")
-	local duration = vlc.input.item():duration()
-
-	local systemHour = os.date("%H")
-	local systemMinute = os.date("%M")
-	local systemSecond = os.date("%S")
-
-	local elapsedHour = math.floor(elapsed_time / 3600)
-	local elapsedMinute = math.floor((elapsed_time % 3600) / 60)
-	local elapsedSecond = elapsed_time % 60
-
-	local remaining_time
-	local ending_time
-	if duration>0 then
----
-		local rate = vlc.var.get(vlc.object.input(),"rate")
-		duration = duration/rate
----
-		local durationHour = math.floor(duration / 3600)
-		local durationMinute = math.floor((duration % 3600) / 60)
-		local durationSecond = math.floor(duration % 60)
-
-		remaining_time = duration - elapsed_time
-		local remainingHour = math.floor(remaining_time / 3600)
-		local remainingMinute = math.floor((remaining_time % 3600) / 60)
-		local remainingSecond = math.floor(remaining_time % 60)
-
-		local endingSecond = math.floor((systemSecond + remainingSecond) % 60)
-		local endingMinute = math.floor(((systemSecond + remainingSecond) / 60 + (systemMinute + remainingMinute)) % 60)
-		local endingHour = math.floor((((systemSecond + remainingSecond) / 60 + (systemMinute + remainingMinute)) / 60 + systemHour + remainingHour) % 24)
-		duration = string.format("%02d:%02d:%02d", durationHour, durationMinute, durationSecond)
----
-		if rate~=1 then duration = duration .. " ("..string.format("%3.1f", rate).."x)" end
----
-		remaining_time = string.format("%02d:%02d:%02d", remainingHour, remainingMinute, remainingSecond)
-		ending_time = string.format("%02d:%02d:%02d", endingHour, endingMinute, endingSecond)
-	else
-		duration = "--:--"
-		remaining_time = "--:--"
-		ending_time = "--:--"
-	end
-
-	local et = elapsed_time
-
-	local elapsed_time = string.format("%02d:%02d:%06.3f", elapsedHour, elapsedMinute, elapsedSecond)
-	--local system_time = os.date("%H:%M:%S")
-	local system_time = systemHour..":"..systemMinute..":"..systemSecond
-
-	local osd_output = string.gsub(TIME_time_format, "%[E%]", elapsed_time)
-	local osd_output = string.gsub(osd_output, "%[T%]", system_time)
-	local osd_output = string.gsub(osd_output, "%[D%]", duration)
-	local osd_output = string.gsub(osd_output, "%[R%]", remaining_time)
-	local osd_output = string.gsub(osd_output, "%[O%]", ending_time)
-
-	local osd_output = string.gsub(osd_output, "%[n%]", vlc.input.item():name())
-
-	local osd_output = string.gsub(osd_output, "%[_%]", "\n")
-	local fps=tonumber(string.match(osd_output,"%[E(.-)%]"))
-	if fps~=nil then
---		osd_output = string.gsub(osd_output, "%[E.-%]", math.floor(et * fps))
-		osd_output = string.gsub(osd_output, "%[E.-%]", string.format("%.3f", et * fps))
-	end
-
-	return osd_output
-end
-
 --- XXX --- TIME ---
 while vlc.playlist.status() == "stopped" do
-    Sleep(1)
+    Sleep(1) 
 end
 
 Load_subtitles()
