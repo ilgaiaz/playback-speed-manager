@@ -25,14 +25,14 @@ INSTALLATION directory:
 config={}
 local cfg={}
 looping_interface = "slowsub_looper_intf" -- Location: \lua\intf\slowsub_looper_intf.lua
---rateTable = {1.1, 1.2, 1.3,1.4,1.5,1.6,1.7,1.8,1.9,2.0,2.1,2.2,2.3,2.4,2.5}
 rateTable = {"1,1", "1,2","1,3","1,4","1,5","1,6","1,7","1,8","1,9","2,0","2,1","2,2","2,3","2,4","2,5"}
--- defaults
---DEF_time_format = "[T]"  -- [T]ime, [O]ver, [E]lapsed, [D]uration, [R]emaining
---DEF_osd_position = "top-right"
---time_formats = {"--- Clear! ---", "[E]", "[E25]", "[D]", "[R]", "[T]", "[O]", "[n]", "[_]", "<--- Append / Replace --->", "[E] / [D]", "[T] >> [O]", "-[R] / [D]", "-[R] ([T])"}
---positions = {"top-left", "top", "top-right", "left", "center", "right", "bottom-left", "bottom", "bottom-right"}
---appendreplace_id = 0
+--Check subs variables
+subtitles_uri = nil -- "file:///D:/films/subtitles.srt"
+charset = "Windows-1250" -- nil or "UTF-8", "ISO-8859-2", ...
+filename_extension = "srt" -- "eng.srt", "srt-vlc", ...
+html1 = "<div align=\"center\" style=\"background-color:white;\"><a style=\"font-family:Verdana;font-size:36px;font-weight:bold;color:black;background-color:white;\">"
+html2 = "</a></div>"
+
 
 function descriptor()
 	return {
@@ -54,15 +54,23 @@ This VLC extension slow down the rate video while a subs is on the screen.
 end
 
 function activate()
-	Get_config()
-	if config and config.SLOWSUB then
-		cfg = config.SLOWSUB
-	end
-	if cfg.first_run==nil or cfg.first_run==true then
-		cfg.first_run = false
-		Set_config(cfg, "SLOWSUB")
-		create_dialog_S()
-	else create_dialog() end
+    Get_config()
+    if vlc.input.item() and check_subtitles() then
+        --cfg.ready = true
+        --Set_config(cfg, "SLOWSUB")
+        vlc.msg.dbg("IF iniziale")
+        if config and config.SLOWSUB then
+            cfg = config.SLOWSUB
+        end
+        if cfg.first_run==nil or cfg.first_run==true then
+            cfg.first_run = false
+            Set_config(cfg, "SLOWSUB")
+            create_dialog_S()
+        else create_dialog() end
+    else
+        create_dialog_error()
+    end
+        
 end
 
 function deactivate()
@@ -70,7 +78,7 @@ function deactivate()
 end
 
 function close()
-	--vlc.deactivate()
+	vlc.deactivate()
 end
 
 function meta_changed()
@@ -118,6 +126,10 @@ function click_CANCEL_settings()
 	trigger_menu(1)
 end
 
+function click_close()
+    vlc.deactivate()
+end
+
 -----------------------------------------
 
 function create_dialog()
@@ -128,15 +140,54 @@ function create_dialog()
 		for i,v in ipairs(rateTable) do
 			dd_rate:add_value(v, i)
 		end
-    rateButton = dlg:add_button("Update Values", clickUpdate,3,1,1,1)
+    rateButton = dlg:add_button("Update values", click_update_rate,3,1,1,1)
 end
 
-function clickUpdate()
+function click_update_rate()
     cfg.rate = dd_rate:get_text()
     Set_config(cfg, "SLOWSUB")
 end
 -----------------------------------------
+    
+-----------------CHECK SUBS--------------  
 
+function create_dialog_error()
+    dlg = vlc.dialog(descriptor().title .. " > ERROR")
+    w1 = dlg:add_label(html1..descriptor().title..html2.."<ol><li>Check if file .srt have the same name and folder of the film</li><li>Play a media before open this extension.</li><li>Take the steps before and now you're ready to use it.</li></ol>", 1, 1, 1, 1)
+    
+    --[[future implementation -> add srt file path with GUI
+    Otherwise write the .srt file's path (/path/to/file.srt) in this label and update the info
+    new_path = dlg:add_text_input("",1,2,1,1)
+    dd_path = dlg:add_button("Update path", click_update_path,1,3,1,1)
+    dd_close = dlg:add_button("Close", click_close,1,4,1,1)
+       ]]
+end
+
+--[[ future implementation 
+function click_update_path()
+    cfg.path = new_path:get_text()
+    Set_config(cfg, "SLOWSUB")
+    vlc.deactivate()
+end
+]]
+function check_subtitles()
+	if subtitles_uri==nil then subtitles_uri=media_path(filename_extension) end
+-- read file
+	local s = vlc.stream(subtitles_uri)
+	if s==nil then return false end
+    return true
+end
+
+    
+function media_path(extension)
+	local media_uri = vlc.input.item():uri()
+	media_uri = string.gsub(media_uri, "^(.*)%..-$","%1") .. "." .. extension
+	vlc.msg.info(media_uri)
+	return media_uri
+end
+
+-----------------------------------------
+        
 function Get_config()
 	local s = vlc.config.get("bookmark10")
 	if not s or not string.match(s, "^config={.*}$") then s = "config={}" end
