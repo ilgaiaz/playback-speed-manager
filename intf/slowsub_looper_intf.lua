@@ -31,9 +31,15 @@ charset = "Windows-1250" -- nil or "UTF-8", "ISO-8859-2", ...
 filename_extension = "srt" -- "eng.srt", "srt-vlc", ...
 --Speed video variables
 rateFactor = 1.5            --Max value recommended 2.0
-slowSpeed = 1.0/rateFactor
 normalSpeed = 1.0
-maxTimeDifference = 4 --Time in seconds
+slowSpeed = normalSpeed/rateFactor
+maxTimeDifference = 3 --Time in seconds
+updateRate = nil
+--Rate table conversion
+rateTable = {["1,1"]=1.1,["1,2"]=1.2,["1,3"]=1.3,["1,4"]=1.4,["1,5"]=1.5,["1,6"]=1.6,["1,7"]=1.7,["1,8"]=1.8,["1,9"]=1.9,["2,0"]=2.0,
+    ["2,1"]=2.1,["2,2"]=2.2,["2,3"]=2.3,["2,4"]=2.4,["2,5"]=2.5}
+    
+
 --**********************LOAD SUBS****************************
 function Load_subtitles()
 	if subtitles_uri==nil then subtitles_uri=media_path(filename_extension) end
@@ -82,11 +88,15 @@ function Pause_detection(my_index)
     local input = vlc.object.input()
     local currentSpeed = vlc.var.get(input,"rate")
     
+    Get_rate() --verify if user change the rate
+        
     actual_time = Get_elapsed()
     vlc.msg.dbg("Current rate: "..vlc.var.get(input,"rate"))
     if my_index == nil then
+        if currentSpeed ~= normalSpeed then vlc.var.set(input, "rate", normalSpeed) end
         return nil  --Avoid some rare case of error when user change the elapsed time
     elseif  subtitles[my_index + 1] == nil then
+        if currentSpeed ~= normalSpeed then vlc.var.set(input, "rate", normalSpeed) end
         return nil  --check for the last subs and avoid error with the table subtitles
     elseif actual_time < subtitles[1][1] then --avoid loop while waiting the first sub 
         --vlc.msg.dbg("FIRST SUB")
@@ -129,6 +139,20 @@ function Get_elapsed()
     local elapsed_time = vlc.var.get(input, "time")
 
     return elapsed_time
+end
+
+function Get_rate()
+    if config.SLOWSUB then 
+        local newRate = config.SLOWSUB.rate
+        updateRate = rateTable[newRate]
+        slowSpeed = normalSpeed / updateRate
+    else
+        return
+    end
+    if updateRate ~= nil then
+        --vlc.msg.dbg("updateRate: ".. updateRate .. type(updateRate))
+        slowSpeed = normalSpeed / updateRate
+    end
 end
 --*****************************ENDOF SLOWSPEED*********************************
         
@@ -197,7 +221,8 @@ function Get_config()
 end
 
 --- XXX --- SLOWSUB ---
---add a loop until a video start'
+        
+--add a loop until video start'
 while vlc.playlist.status() == "stopped" do
     Sleep(1) 
 end
