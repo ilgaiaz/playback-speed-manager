@@ -30,18 +30,20 @@ subtitles_uri = nil -- "file:///D:/films/subtitles.srt"
 charset = "Windows-1250" -- nil or "UTF-8", "ISO-8859-2", ...
 filename_extension = "srt" -- "eng.srt", "srt-vlc", ...
 --Speed video variables
-rateFactor = 1.5            --Max value recommended 2.0
+rateFactor = nil            --dafault
 normalSpeed = 1.0
-slowSpeed = normalSpeed/rateFactor
+slowSpeed = nil--normalSpeed/rateFactor
 maxTimeDifference = 3 --Time in seconds
-updateRate = nil
 --Rate table conversion
-rateTable = {["1,1"]=1.1,["1,2"]=1.2,["1,3"]=1.3,["1,4"]=1.4,["1,5"]=1.5,["1,6"]=1.6,["1,7"]=1.7,["1,8"]=1.8,["1,9"]=1.9,["2,0"]=2.0,
-    ["2,1"]=2.1,["2,2"]=2.2,["2,3"]=2.3,["2,4"]=2.4,["2,5"]=2.5}
+rateTable = {["1,1"]=1.1,["1,2"]=1.2,["1,3"]=1.3,["1,4"]=1.4,["1,5"]=1.5,["1,6"]=1.6,["1,7"]=1.7,["1,8"]=1.8,["1,9"]=1.9,["2,0"]=2.0}
     
 
 --**********************LOAD SUBS****************************
 function Load_subtitles()
+    --future implementation
+    --Get_config()
+    --if config.SLOWSUB.path then subtitles_uri = config.SLOWSUB.path end
+        
 	if subtitles_uri==nil then subtitles_uri=media_path(filename_extension) end
 -- read file
 	local s = vlc.stream(subtitles_uri)
@@ -63,8 +65,6 @@ function Load_subtitles()
         --Add value start/stop time and text in the table subtitles
 		table.insert(subtitles,{format_time(h1, m1, s1, ms1), format_time(h2, m2, s2, ms2), text})
 	end
-	
-	--if #subtitles~=0 then return true else return false end
 end
 
 function format_time(h,m,s,ms) -- time to seconds
@@ -144,14 +144,16 @@ end
 function Get_rate()
     if config.SLOWSUB then 
         local newRate = config.SLOWSUB.rate
-        updateRate = rateTable[newRate]
-        slowSpeed = normalSpeed / updateRate
+        rateFactor = rateTable[newRate]
     else
         return
     end
-    if updateRate ~= nil then
+    if rateFactor ~= nil then
         --vlc.msg.dbg("updateRate: ".. updateRate .. type(updateRate))
-        slowSpeed = normalSpeed / updateRate
+        slowSpeed = normalSpeed / rateFactor
+    else
+        --This option is true when extension si off so keep the rate to 1
+        slowSpeed = 1
     end
 end
 --*****************************ENDOF SLOWSPEED*********************************
@@ -162,6 +164,7 @@ function Looper()
     local last_index = 1
 	local curi=nil
 	local loops=0 -- counter of loops
+    
 	while true do
 		if vlc.volume.get() == -256 then break end  -- inspired by syncplay.lua; kills vlc.exe process in Task Manager
 		Get_config()
@@ -222,8 +225,12 @@ end
 
 --- XXX --- SLOWSUB ---
         
+--future implementation check if sub file is ready
+--Get_config()
+--subs_ready = config.SLOWSUB.ready == false 
 --add a loop until video start'
 while vlc.playlist.status() == "stopped" do
+    --Get_config()
     Sleep(1) 
 end
 

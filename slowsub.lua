@@ -25,7 +25,8 @@ INSTALLATION directory:
 config={}
 local cfg={}
 looping_interface = "slowsub_looper_intf" -- Location: \lua\intf\slowsub_looper_intf.lua
-rateTable = {"1,1", "1,2","1,3","1,4","1,5","1,6","1,7","1,8","1,9","2,0","2,1","2,2","2,3","2,4","2,5"}
+rateTable = {"1,1", "1,2","1,3","1,4","1,5","1,6","1,7","1,8","1,9","2,0"}
+defaultRate = "1,5"
 --Check subs variables
 subtitles_uri = nil -- "file:///D:/films/subtitles.srt"
 charset = "Windows-1250" -- nil or "UTF-8", "ISO-8859-2", ...
@@ -58,10 +59,9 @@ function activate()
     if vlc.input.item() and check_subtitles() then
         --cfg.ready = true
         --Set_config(cfg, "SLOWSUB")
-        vlc.msg.dbg("IF iniziale")
-        if config and config.SLOWSUB then
-            cfg = config.SLOWSUB
-        end
+        if config and config.SLOWSUB then cfg = config.SLOWSUB end
+        cfg.rate = defaultRate
+        Set_config(cfg, "SLOWSUB")
         if cfg.first_run==nil or cfg.first_run==true then
             cfg.first_run = false
             Set_config(cfg, "SLOWSUB")
@@ -74,11 +74,13 @@ function activate()
 end
 
 function deactivate()
+    cfg.rate = 1
+    Set_config(cfg, "SLOWSUB")
     --create_dialog_S()
 end
 
 function close()
-	vlc.deactivate()
+	--vlc.deactivate()
 end
 
 function meta_changed()
@@ -153,8 +155,8 @@ end
 
 function create_dialog_error()
     dlg = vlc.dialog(descriptor().title .. " > ERROR")
-    w1 = dlg:add_label(html1..descriptor().title..html2.."<ol><li>Check if file .srt have the same name and folder of the film</li><li>Play a media before open this extension.</li><li>Take the steps before and now you're ready to use it.</li></ol>", 1, 1, 1, 1)
-    
+    w1 = dlg:add_label(html1..descriptor().title..html2.."<ol><li>Check if file .srt have the same name and folder of the film</li><li>Play a media before open this extension.</li><li>If the film is already on restart VLC for changes to take effect!</li><li>Take the steps before and now you're ready to use it.</li></ol>", 1, 1, 1, 1)
+    dd_close = dlg:add_button("Close", click_close,1,4,1,1)
     --[[future implementation -> add srt file path with GUI
     Otherwise write the .srt file's path (/path/to/file.srt) in this label and update the info
     new_path = dlg:add_text_input("",1,2,1,1)
