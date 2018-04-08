@@ -25,8 +25,8 @@ INSTALLATION directory:
 config={}
 local cfg={}
 looping_interface = "slowsub_looper_intf" -- Location: \lua\intf\slowsub_looper_intf.lua
-rateTable = {"1,1", "1,2","1,3","1,4","1,5","1,6","1,7","1,8","1,9","2,0"}
-defaultRate = "1,5"
+rateTable = {"0,9x", "0,83x","0,77x","0,71x","0,66x","0,625x","0,58x","0,55x","0,52x","0,5x"}
+defaultRate = "0,66x"
 --Check subs variables
 subtitles_uri = nil -- "file:///D:/films/subtitles.srt"
 charset = "Windows-1250" -- nil or "UTF-8", "ISO-8859-2", ...
@@ -40,7 +40,7 @@ function descriptor()
 		title = "Slow Sub";
 		version = "3.0";
 		author = "michele";
-		url = 'http://addons.videolan.org/content/show.php?content=149618';
+		--url = '';
 --		shortdesc = "Time displayer.";
 -- No shortdesc to use title instead of short description in VLC menu.
 -- Then the first line of description will be the short description.
@@ -137,7 +137,7 @@ end
 function create_dialog()
 	dlg = vlc.dialog(descriptor().title)
 	--dlg:add_label("Time format: \\ Position:",1,1,2,1)
-	dlg:add_label("<b>Slow rate</b>",1,1,1,1)
+	dlg:add_label("<b>Slow speed</b>",1,1,1,1)
     dd_rate = dlg:add_dropdown(2,1,1,1)
 		for i,v in ipairs(rateTable) do
 			dd_rate:add_value(v, i)

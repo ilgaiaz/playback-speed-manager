@@ -35,7 +35,7 @@ normalSpeed = 1.0
 slowSpeed = nil--normalSpeed/rateFactor
 maxTimeDifference = 3 --Time in seconds
 --Rate table conversion
-rateTable = {["1,1"]=1.1,["1,2"]=1.2,["1,3"]=1.3,["1,4"]=1.4,["1,5"]=1.5,["1,6"]=1.6,["1,7"]=1.7,["1,8"]=1.8,["1,9"]=1.9,["2,0"]=2.0}
+rateTable = {["0,9x"]=1.1,["0,83x"]=1.2,["0,77x"]=1.3,["0,71x"]=1.4,["0,66x"]=1.5,["0,625x"]=1.6,["0,58x"]=1.7,["0,55x"]=1.8,["0,52"]=1.9,["0,5x"]=2.0}
     
 
 --**********************LOAD SUBS****************************
@@ -65,6 +65,7 @@ function Load_subtitles()
         --Add value start/stop time and text in the table subtitles
 		table.insert(subtitles,{format_time(h1, m1, s1, ms1), format_time(h2, m2, s2, ms2), text})
 	end
+    if #subtitles~=0 then return true else return false end
 end
 
 function format_time(h,m,s,ms) -- time to seconds
@@ -136,7 +137,9 @@ end
 
 function Get_elapsed()
     local input = vlc.object.input()
-    local elapsed_time = vlc.var.get(input, "time")
+    --VLC 3 : elapsed_time must be divided by 1000000
+    --VLC2.1+ : Don't need the division
+    local elapsed_time = vlc.var.get(input, "time") / 1000000
 
     return elapsed_time
 end
@@ -152,7 +155,7 @@ function Get_rate()
         --vlc.msg.dbg("updateRate: ".. updateRate .. type(updateRate))
         slowSpeed = normalSpeed / rateFactor
     else
-        --This option is true when extension si off so keep the rate to 1
+        --This option is true when extension is off so keep the rate to 1
         slowSpeed = 1
     end
 end
@@ -229,10 +232,12 @@ end
 --Get_config()
 --subs_ready = config.SLOWSUB.ready == false 
 --add a loop until video start'
+
 while vlc.playlist.status() == "stopped" do
     --Get_config()
+    --Load_subtitles()
     Sleep(1) 
 end
-
+--and Load_subtitles()
 Load_subtitles()
 Looper()
