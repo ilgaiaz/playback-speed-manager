@@ -65,12 +65,13 @@ function Load_subtitles()
         --Add value start/stop time and text in the table subtitles
 		table.insert(subtitles,{format_time(h1, m1, s1, ms1), format_time(h2, m2, s2, ms2), text})
 	end
+    
     if #subtitles~=0 then return true else return false end
 end
 
 function format_time(h,m,s,ms) -- time to seconds
-    --ToDO : add millisecond
-	return tonumber(h)*3600+tonumber(m)*60+tonumber(s) -- +tonumber("."..ms)
+    --ToDO : add millisecond + tonumber(ms)
+	return tonumber(h)*3600+tonumber(m)*60+tonumber(s)
 end
 
 function media_path(extension)
@@ -120,7 +121,6 @@ function Pause_detection(my_index)
         vlc.var.set(input, "rate", slowSpeed)
         return my_index + 1 --if we are in the next Sub update my_index
     else --if user change the elapsed time check all subs and wait for the new index
-        --vlc.msg.dbg("INTO THE WHILE")
         while subtitles[i] do
             if actual_time>=subtitles[i][1] and actual_time<=subtitles[i][2] then
                 if currentSpeed ~= slowSpeed then vlc.var.set(input, "rate", slowSpeed) end
@@ -132,13 +132,12 @@ function Pause_detection(my_index)
     
     if currentSpeed ~= normalSpeed then vlc.var.set(input, "rate", normalSpeed) end
     return my_index
-    --vlc.msg.dbg("End loop")
 end
 
 function Get_elapsed()
     local input = vlc.object.input()
     --VLC 3 : elapsed_time must be divided by 1000000
-    --VLC2.1+ : Don't need the division
+    --VLC2.1+ : Don't need the division 
     local elapsed_time = vlc.var.get(input, "time") / 1000000
 
     return elapsed_time
@@ -168,6 +167,8 @@ function Looper()
 	local curi=nil
 	local loops=0 -- counter of loops
     
+    Load_subtitles()
+    
 	while true do
 		if vlc.volume.get() == -256 then break end  -- inspired by syncplay.lua; kills vlc.exe process in Task Manager
 		Get_config()
@@ -185,15 +186,16 @@ function Looper()
 			local uri=nil
 			if vlc.input.item() then uri=vlc.input.item():uri() end
 			if not uri then --- WTF (VLC 2.1+): status playing with nil input? Stopping? O.K. in VLC 2.0.x
-				Log("WTF??? " .. vlc.playlist.status())
+				Log("Playlist status: " .. vlc.playlist.status())
 				Sleep(0.1)
 			elseif not curi or curi~=uri then -- new input (first input or changed input)
 				curi=uri
+                Load_subtitles() --Update subtitles for the new video
 				Log(curi)
 			else -- current input
 				if vlc.playlist.status()=="playing" then
                     --Call the function only when the video is playing
-                    if not config.SLOWSUB or config.SLOWSUB.stop~=true then 
+                    if config.SLOWSUB then 
                         last_index = Pause_detection(last_index)
                         if last_index == nil then Sleep(0.3) end
                         --vlc.msg.dbg("last_index value: "..last_index)
@@ -239,5 +241,4 @@ while vlc.playlist.status() == "stopped" do
     Sleep(1) 
 end
 --and Load_subtitles()
-Load_subtitles()
 Looper()
