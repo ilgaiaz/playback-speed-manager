@@ -25,8 +25,8 @@ INSTALLATION directory:
 config={}
 local cfg={}
 looping_interface = "slowsub_looper_intf" -- Location: \lua\intf\slowsub_looper_intf.lua
-rateTable = {"0,9x", "0,83x","0,77x","0,71x","0,66x","0,625x","0,58x","0,55x","0,52x","0,5x"}
-defaultRate = "0,66x"
+rateTable = {"0.9", "0.85", "0.80", "0.75", "0.70", "0.65", "0.60", "0.55", "0.50"}
+defaultRate = "0.65"
 --Check subs variables
 subtitles_uri = nil -- "file:///D:/films/subtitles.srt"
 charset = "Windows-1250" -- nil or "UTF-8", "ISO-8859-2", ...
@@ -36,37 +36,41 @@ html2 = "</a></div>"
 
 
 function descriptor()
-	return {
-		title = "Slow Sub";
-		version = "3.0";
-		author = "michele";
-		--url = '';
---		shortdesc = "Time displayer.";
+    return {
+        title = "Slow Sub";
+        version = "3.0";
+        author = "michele";
+        --url = '';
+--        shortdesc = "Time displayer.";
 -- No shortdesc to use title instead of short description in VLC menu.
 -- Then the first line of description will be the short description.
-		description = [[
+        description = [[
 Slow Sub
 
 This VLC extension slow down the rate video while a subs is on the screen.
 (Extension script "slowsub.lua" + Interface script "slowsub_looper_intf.lua")
 ]];
-		capabilities = {"menu"}
-	}
+        capabilities = {"menu"}
+    }
 end
 
 function activate()
-    Get_config()
+    get_config()
     if vlc.input.item() and check_subtitles() then
         --cfg.ready = true
-        --Set_config(cfg, "SLOWSUB")
-        if config and config.SLOWSUB then cfg = config.SLOWSUB end
+        --set_config(cfg, "SLOWSUB")
+        if config and config.SLOWSUB then 
+            cfg = config.SLOWSUB 
+        end
         cfg.rate = defaultRate
-        Set_config(cfg, "SLOWSUB")
+        set_config(cfg, "SLOWSUB")
         if cfg.first_run==nil or cfg.first_run==true then
             cfg.first_run = false
-            Set_config(cfg, "SLOWSUB")
+            set_config(cfg, "SLOWSUB")
             create_dialog_S()
-        else create_dialog() end
+        else 
+            create_dialog() 
+        end
     else
         create_dialog_error()
     end
@@ -75,57 +79,61 @@ end
 
 function deactivate()
     cfg.rate = 1
-    Set_config(cfg, "SLOWSUB")
+    set_config(cfg, "SLOWSUB")
     --create_dialog_S()
 end
 
 function close()
-	--vlc.deactivate()
+    vlc.deactivate()
 end
 
 function meta_changed()
 end
 
 function menu()
-	return {"Control panel", "Settings"}
+    return {"Control panel", "Settings"}
 end
 function trigger_menu(id)
     if id==1 then -- Control panel
-		if dlg then dlg:delete() end
-		create_dialog()
-	elseif id==2 then -- Settings
-		if dlg then dlg:delete() end
-		create_dialog_S()
-	end
+        if dlg then 
+            dlg:delete() 
+        end
+        create_dialog()
+    elseif id==2 then -- Settings
+        if dlg then 
+            dlg:delete() 
+        end
+        create_dialog_S()
+    end
 end
 
 -----------------------------------------
 
 function create_dialog_S()
-	dlg = vlc.dialog(descriptor().title .. " > SETTINGS")
-	cb_extraintf = dlg:add_check_box("Enable interface: ", true,1,1,1,1)
-	ti_luaintf = dlg:add_text_input(looping_interface,2,1,2,1)
-	dlg:add_button("SAVE", click_SAVE_settings,1,2,1,1)
-	dlg:add_button("CANCEL", click_CANCEL_settings,2,2,1,1)
-	lb_message = dlg:add_label("CLI options: --extraintf=luaintf --lua-intf="..looping_interface,1,3,3,1)
+    dlg = vlc.dialog(descriptor().title .. " > SETTINGS")
+    cb_extraintf = dlg:add_check_box("Enable interface: ", true,1,1,1,1)
+    ti_luaintf = dlg:add_text_input(looping_interface,2,1,2,1)
+    dlg:add_button("SAVE", click_SAVE_settings,1,2,1,1)
+    dlg:add_button("CANCEL", click_CANCEL_settings,2,2,1,1)
+    lb_message = dlg:add_label("CLI options: --extraintf=luaintf --lua-intf="..looping_interface,1,3,3,1)
 end
 
 function click_SAVE_settings()
     --Verify the checkbox and set the config file
-	if cb_extraintf:get_checked() then 
-		vlc.config.set("extraintf", "luaintf")
-		vlc.config.set("lua-intf", ti_luaintf:get_text())
-	else
-		--if user uncheck the box at next start the looper doesn't work
+    if cb_extraintf:get_checked() then 
+        vlc.config.set("extraintf", "luaintf")
+        vlc.config.set("lua-intf", ti_luaintf:get_text())
+    else
+        --if user uncheck the box at next start the looper doesn't work
         vlc.config.set("extraintf", "")
         cfg.first_run = true
-        Set_config(cfg, "SLOWSUB")
-	end
-	lb_message:set_text("Please restart VLC for changes to take effect!")
+        set_config(cfg, "SLOWSUB")
+    end
+    lb_message:set_text("Please restart VLC for changes to take effect!")
 end
 
 function click_CANCEL_settings()
-	trigger_menu(1)
+    trigger_menu(1)
 end
 
 function click_close()
@@ -135,19 +143,19 @@ end
 -----------------------------------------
 
 function create_dialog()
-	dlg = vlc.dialog(descriptor().title)
-	--dlg:add_label("Time format: \\ Position:",1,1,2,1)
-	dlg:add_label("<b>Slow speed</b>",1,1,1,1)
+    dlg = vlc.dialog(descriptor().title)
+    --dlg:add_label("Time format: \\ Position:",1,1,2,1)
+    dlg:add_label("<b>Slow speed</b>",1,1,1,1)
     dd_rate = dlg:add_dropdown(2,1,1,1)
-		for i,v in ipairs(rateTable) do
-			dd_rate:add_value(v, i)
-		end
+        for i,v in ipairs(rateTable) do
+            dd_rate:add_value(v, i)
+        end
     rateButton = dlg:add_button("Update values", click_update_rate,3,1,1,1)
 end
 
 function click_update_rate()
     cfg.rate = dd_rate:get_text()
-    Set_config(cfg, "SLOWSUB")
+    set_config(cfg, "SLOWSUB")
 end
 -----------------------------------------
     
@@ -168,55 +176,67 @@ end
 --[[ future implementation 
 function click_update_path()
     cfg.path = new_path:get_text()
-    Set_config(cfg, "SLOWSUB")
+    set_config(cfg, "SLOWSUB")
     vlc.deactivate()
 end
 ]]
 function check_subtitles()
-	if subtitles_uri==nil then subtitles_uri=media_path(filename_extension) end
+    if subtitles_uri==nil then 
+        subtitles_uri=media_path(filename_extension) 
+    end
 -- read file
-	local s = vlc.stream(subtitles_uri)
-	if s==nil then return false end
+    local s = vlc.stream(subtitles_uri)
+    if s==nil then 
+        return false 
+    end
     return true
 end
 
     
 function media_path(extension)
-	local media_uri = vlc.input.item():uri()
-	media_uri = string.gsub(media_uri, "^(.*)%..-$","%1") .. "." .. extension
-	vlc.msg.info(media_uri)
-	return media_uri
+    local media_uri = vlc.input.item():uri()
+    media_uri = string.gsub(media_uri, "^(.*)%..-$","%1") .. "." .. extension
+    vlc.msg.info(media_uri)
+    return media_uri
 end
 
 -----------------------------------------
         
-function Get_config()
-	local s = vlc.config.get("bookmark10")
-	if not s or not string.match(s, "^config={.*}$") then s = "config={}" end
-	--Assert : check if there is an error from function
+function get_config()
+    local s = vlc.config.get("bookmark10")
+    if not s or not string.match(s, "^config={.*}$") then 
+        s = "config={}" 
+    end
+    --Assert : check if there is an error from function
     --Loadstring  : loadstring load a Lua chunk from a string and it only compiles the chunk and returns the compiled chunk as a function
-    assert(loadstring(s))() -- global var
+    assert(loadstring(s))() -- loads the vlcrc string in "bookmark10" (like a refresh after modified) ??
 end
 
-function Set_config(cfg_table, cfg_title)
-	if not cfg_table then cfg_table={} end
-	if not cfg_title then cfg_title=descriptor().title end
-	Get_config()
-	config[cfg_title]=cfg_table
-	vlc.config.set("bookmark10", "config="..Serialize(config))
+function set_config(cfg_table, cfg_title)
+    if not cfg_table then 
+        cfg_table={} 
+    end
+    if not cfg_title then 
+        cfg_title=descriptor().title 
+    end
+    get_config()
+    config[cfg_title]=cfg_table
+    vlc.config.set("bookmark10", "config="..serialize(config))
 end
 
-function Serialize(t)
-	if type(t)=="table" then
-		local s='{'
-		for k,v in pairs(t) do
-			if type(k)~='number' then k='"'..k..'"' end
-			s = s..'['..k..']='..Serialize(v)..',' -- recursion
-		end
-		return s..'}'
-	elseif type(t)=="string" then
-		return string.format("%q", t)
-	else --if type(t)=="boolean" or type(t)=="number" then
-		return tostring(t)
-	end
+function serialize(t)
+    if type(t)=="table" then
+        local s='{'
+        for k,v in pairs(t) do
+            if type(k)~='number' then 
+                k='"'..k..'"' 
+            end
+            s = s..'['..k..']='..serialize(v)..',' -- recursion
+        end
+        return s..'}'
+    elseif type(t)=="string" then
+        return string.format("%q", t)
+    else --if type(t)=="boolean" or type(t)=="number" then
+        return tostring(t)
+    end
 end
