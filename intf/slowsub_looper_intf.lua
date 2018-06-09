@@ -38,7 +38,7 @@ function load_subtitles()
     --get_config()
     --if config.SLOWSUB.path then subtitles_uri = config.SLOWSUB.path end
     local subtitles_uri = media_path(filename_extension) 
-    -- read file
+    -- read file subtitles_uri
     local s = vlc.stream(subtitles_uri)
     if s==nil then 
         return false 
@@ -186,9 +186,7 @@ end
 function looper()
     local last_index = 1
     local curi=nil
-    
-    load_subtitles()
-    
+
     while true do
         if vlc.volume.get() == -256 then -- inspired by syncplay.lua; kills vlc.exe process in Task Manager
             break 
@@ -260,11 +258,4 @@ end
 --get_config()
 --subs_ready = config.SLOWSUB.ready == false 
 --add a loop until video start'
-
-while vlc.playlist.status() == "stopped" do
-    --get_config()
-    --load_subtitles()
-    sleep(1) 
-end
---and load_subtitles()
 looper()
