@@ -26,12 +26,10 @@ config={}
 --config.TIME={} -- subtable reserved for TIME extension
 config.SLOWSUB={} -- subtable reserved for slowsub extension
 --Load subs variables
-subtitles_uri = nil -- "file:///D:/films/subtitles.srt"
-charset = "Windows-1250" -- nil or "UTF-8", "ISO-8859-2", ...
+charset = "UTF-8" -- nil or "UTF-8", "ISO-8859-2", Windows-1250...
 filename_extension = "srt" -- "eng.srt", "srt-vlc", ...
 --Speed video variables
-normalSpeed = 1.0
-maxTimeDifference = 3 --Time in seconds
+MAXTIMEDIFFERENCE = 3 --Time in seconds
     
 
 --**********************LOAD SUBS****************************
@@ -39,11 +37,8 @@ function load_subtitles()
     --future implementation
     --get_config()
     --if config.SLOWSUB.path then subtitles_uri = config.SLOWSUB.path end
-        
-    if subtitles_uri==nil then 
-        subtitles_uri=media_path(filename_extension) 
-    end
--- read file
+    local subtitles_uri = media_path(filename_extension) 
+    -- read file
     local s = vlc.stream(subtitles_uri)
     if s==nil then 
         return false 
@@ -56,7 +51,7 @@ function load_subtitles()
     if string.char(0xEF,0xBB,0xBF)==string.sub(data,1,3) then 
         charset=nil 
     end
--- parse datavlc.object.
+    -- parse datavlc.object.
     subtitles={}
     srt_pattern = "(%d%d):(%d%d):(%d%d),(%d%d%d) %-%-> (%d%d):(%d%d):(%d%d),(%d%d%d).-\n(.-)\n\n"
     --Find string match for find time value in the srt file
@@ -71,12 +66,12 @@ function load_subtitles()
         --Add value start/stop time and text in the table subtitles
         table.insert(subtitles,{format_time(h1, m1, s1, ms1), format_time(h2, m2, s2, ms2), text})
     end
-    
-    if #subtitles~=0 then 
-        return true 
-    else 
-        return false 
-    end
+    --for future implementation
+    --if #subtitles~=0 then 
+        --return true 
+    --else 
+        --return false 
+    --end
 end
 
 function format_time(h,m,s,ms) -- time to seconds
@@ -99,8 +94,8 @@ function rate_adjustment(my_index)
     local i = 1
     local input = vlc.object.input()
     local currentSpeed = vlc.var.get(input,"rate")
-    
-    local slowSpeed = get_rate() --verify if user change the rate
+    local normalSpeed = 1.0
+    local updatedSpeed = set_video_speed(normalSpeed) --verify if user change the rate
         
     actual_time = get_elapsed_time()
     vlc.msg.dbg("Current rate: "..vlc.var.get(input,"rate"))
@@ -122,13 +117,13 @@ function rate_adjustment(my_index)
         return 1
     elseif actual_time >= subtitles[my_index][1] and actual_time<=subtitles[my_index][2] then
         --vlc.msg.dbg("IN THE SUB")
-        if currentSpeed ~= slowSpeed then 
-            vlc.var.set(input, "rate", slowSpeed) 
+        if currentSpeed ~= updatedSpeed then 
+            vlc.var.set(input, "rate", updatedSpeed) 
         end
         return my_index --if find the next sub return the index and avoid the while
     elseif actual_time > subtitles[my_index][2] and actual_time < subtitles[my_index + 1][1] then
         --vlc.msg.dbg("BETWEEN 2 SUB")
-        if (subtitles[my_index + 1][1] - subtitles[my_index][2]) < maxTimeDifference then
+        if (subtitles[my_index + 1][1] - subtitles[my_index][2]) < MAXTIMEDIFFERENCE then
             return my_index --don't change the rate if two subs are near 
         elseif currentSpeed ~= normalSpeed then 
             vlc.var.set(input, "rate", normalSpeed) 
@@ -136,14 +131,14 @@ function rate_adjustment(my_index)
         return my_index --if we are in the middle from two consecutive subs return and avoid the while
     elseif actual_time >= subtitles[my_index + 1][1] and actual_time<=subtitles[my_index + 1][2] then
         --vlc.msg.dbg("NEXT SUB")
-        vlc.var.set(input, "rate", slowSpeed)
+        vlc.var.set(input, "rate", updatedSpeed)
         return my_index + 1 --if we are in the next Sub update my_index
     else --if user change the elapsed time check all subs and wait for the new index
         if not ((actual_time>=subtitles[my_index][1] and actual_time<=subtitles[my_index][2]) or actual_time<=subtitles[my_index][1]) then 
             while subtitles[i] do
                 if actual_time>=subtitles[i][1] and actual_time<=subtitles[i][2] then
-                    if currentSpeed ~= slowSpeed then 
-                        vlc.var.set(input, "rate", slowSpeed)
+                    if currentSpeed ~= updatedSpeed then 
+                        vlc.var.set(input, "rate", updatedSpeed)
                     end
                     return i
                 elseif actual_time<=subtitles[i][1] then 
@@ -169,7 +164,7 @@ function get_elapsed_time()
     return elapsed_time
 end
 
-function get_rate()
+function set_video_speed(mySpeed)
     local rateFactor = nil
     if config.SLOWSUB then 
         rateFactor = tonumber(config.SLOWSUB.rate)
@@ -178,7 +173,7 @@ function get_rate()
     end
     if rateFactor ~= nil then
         --vlc.msg.dbg("updateRate: ".. rateFactor .. type(rateFactor))
-        return normalSpeed * rateFactor
+        return mySpeed * rateFactor
     else
         --This option is true when extension is off so keep the rate to 1
         return 1
@@ -191,22 +186,21 @@ end
 function looper()
     local last_index = 1
     local curi=nil
-    local loops=0 -- counter of loops
     
     load_subtitles()
     
     while true do
-        if vlc.volume.get() == -256 then break end  -- inspired by syncplay.lua; kills vlc.exe process in Task Manager
+        if vlc.volume.get() == -256 then -- inspired by syncplay.lua; kills vlc.exe process in Task Manager
+            break 
+        end  
         get_config()
---        config.SLOWSUB={time_format="[E1]",osd_position="bottom-left"}
+        --config.SLOWSUB={time_format="[E1]",osd_position="bottom-left"}
 
         if vlc.playlist.status()=="stopped" then -- no input or stopped input
             if curi then -- input stopped
                 log_msg("stopped")
                 curi=nil
             end
-            loops=loops+1
-            log_msg(loops)
             sleep(1)
         else -- playing, paused
             local uri=nil
@@ -235,7 +229,7 @@ function looper()
                     --log_msg("paused")
                     sleep(0.3)
                 else -- ?
-                    log_msg("unknown")
+                    log_msg("unknown. Playlist status: ".. vlc.playlist.status())
                     sleep(1)
                 end
                 sleep(0.1)
@@ -254,7 +248,9 @@ end
 
 function get_config()
     local s = vlc.config.get("bookmark10")
-    if not s or not string.match(s, "^config={.*}$") then s = "config={}" end
+    if not s or not string.match(s, "^config={.*}$") then 
+        s = "config={}" 
+    end
     assert(loadstring(s))() -- global var
 end
 

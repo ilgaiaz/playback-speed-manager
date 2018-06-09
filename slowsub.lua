@@ -25,11 +25,9 @@ INSTALLATION directory:
 config={}
 local cfg={}
 looping_interface = "slowsub_looper_intf" -- Location: \lua\intf\slowsub_looper_intf.lua
-rateTable = {"0.9", "0.85", "0.80", "0.75", "0.70", "0.65", "0.60", "0.55", "0.50"}
-defaultRate = "0.65"
+rateTable = {0.9, 0.85, 0.80, 0.75, 0.70, 0.65, 0.60, 0.55, 0.50}
+DEFAULTRATE = "0.65"
 --Check subs variables
-subtitles_uri = nil -- "file:///D:/films/subtitles.srt"
-charset = "Windows-1250" -- nil or "UTF-8", "ISO-8859-2", ...
 filename_extension = "srt" -- "eng.srt", "srt-vlc", ...
 html1 = "<div align=\"center\" style=\"background-color:white;\"><a style=\"font-family:Verdana;font-size:36px;font-weight:bold;color:black;background-color:white;\">"
 html2 = "</a></div>"
@@ -62,7 +60,7 @@ function activate()
         if config and config.SLOWSUB then 
             cfg = config.SLOWSUB 
         end
-        cfg.rate = defaultRate
+        cfg.rate = DEFAULTRATE
         set_config(cfg, "SLOWSUB")
         if cfg.first_run==nil or cfg.first_run==true then
             cfg.first_run = false
@@ -78,7 +76,7 @@ function activate()
 end
 
 function deactivate()
-    cfg.rate = 1
+    cfg.rate = "1"
     set_config(cfg, "SLOWSUB")
     --create_dialog_S()
 end
@@ -163,7 +161,7 @@ end
 
 function create_dialog_error()
     dlg = vlc.dialog(descriptor().title .. " > ERROR")
-    w1 = dlg:add_label(html1..descriptor().title..html2.."<ol><li>Check if file .srt have the same name and folder of the film</li><li>Play a media before open this extension.</li><li>If the film is already on restart VLC for changes to take effect!</li><li>Take the steps before and now you're ready to use it.</li></ol>", 1, 1, 1, 1)
+    w1 = dlg:add_label(html1..descriptor().title..html2.."<ol><li>Check if the file .srt has the same name of the movie and is in the same folder</li><li> Play a media before opening this extension</li><li>If the movie is already playing restart VLC for changes to take effect</li></ol>", 1, 1, 1, 1)
     dd_close = dlg:add_button("Close", click_close,1,4,1,1)
     --[[future implementation -> add srt file path with GUI
     Otherwise write the .srt file's path (/path/to/file.srt) in this label and update the info
@@ -181,9 +179,7 @@ function click_update_path()
 end
 ]]
 function check_subtitles()
-    if subtitles_uri==nil then 
-        subtitles_uri=media_path(filename_extension) 
-    end
+    subtitles_uri=media_path(filename_extension) 
 -- read file
     local s = vlc.stream(subtitles_uri)
     if s==nil then 
