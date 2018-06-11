@@ -25,8 +25,8 @@ INSTALLATION directory:
 config={}
 local cfg={}
 looping_interface = "slowsub_looper_intf" -- Location: \lua\intf\slowsub_looper_intf.lua
-rateTable = {0.9, 0.85, 0.80, 0.75, 0.70, 0.65, 0.60, 0.55, 0.50}
-DEFAULTRATE = "0.65"
+rateTable = {"0.9", "0.85", "0.80", "0.75", "0.70", "0.65", "0.60", "0.55", "0.50"}
+DEFAULTRATE = "0.70"
 --Check subs variables
 filename_extension = "srt" -- "eng.srt", "srt-vlc", ...
 html1 = "<div align=\"center\" style=\"background-color:white;\"><a style=\"font-family:Verdana;font-size:36px;font-weight:bold;color:black;background-color:white;\">"
@@ -54,43 +54,35 @@ end
 
 function activate()
     get_config()
+    if config and config.SLOWSUB then 
+        cfg = config.SLOWSUB 
+    end
+    if cfg.first_run==nil or cfg.first_run==true then
+        cfg.first_run = false
+        set_config(cfg, "SLOWSUB")
+        create_dialog_S()
+    end
     if vlc.input.item() and check_subtitles() then
-        --cfg.ready = true
-        --set_config(cfg, "SLOWSUB")
-        if config and config.SLOWSUB then 
-            cfg = config.SLOWSUB 
-        end
         cfg.rate = DEFAULTRATE
         set_config(cfg, "SLOWSUB")
-        if cfg.first_run==nil or cfg.first_run==true then
-            cfg.first_run = false
-            set_config(cfg, "SLOWSUB")
-            create_dialog_S()
-        else 
-            create_dialog() 
-        end
+        create_dialog() 
     else
         create_dialog_error()
     end
-        
 end
 
 function deactivate()
     cfg.rate = "1"
     set_config(cfg, "SLOWSUB")
-    --create_dialog_S()
 end
 
 function close()
-    vlc.deactivate()
-end
-
-function meta_changed()
 end
 
 function menu()
     return {"Control panel", "Settings"}
 end
+
 function trigger_menu(id)
     if id==1 then -- Control panel
         if dlg then 
@@ -106,32 +98,34 @@ function trigger_menu(id)
 end
 
 -----------------------------------------
-
 function create_dialog_S()
     dlg = vlc.dialog(descriptor().title .. " > SETTINGS")
-    cb_extraintf = dlg:add_check_box("Enable interface: ", true,1,1,1,1)
-    ti_luaintf = dlg:add_text_input(looping_interface,2,1,2,1)
-    dlg:add_button("SAVE", click_SAVE_settings,1,2,1,1)
+    message = dlg:add_label(html1..descriptor().title..html2.."To run the extension SlowSub<br>a VLC loop interface needs to be activated the first time</br>.<br>Do you want to enable it now?</br>", 1, 1, 1, 1)
+    dlg:add_button("ENABLE", click_ENABLE,1,2,1,1)
     dlg:add_button("CANCEL", click_CANCEL_settings,2,2,1,1)
-    lb_message = dlg:add_label("CLI options: --extraintf=luaintf --lua-intf="..looping_interface,1,3,3,1)
+end
+
+function click_ENABLE()
+    vlc.config.set("extraintf", "luaintf")
+    vlc.config.set("lua-intf", "slowsub_looper_intf")
 end
 
 function click_SAVE_settings()
     --Verify the checkbox and set the config file
-    if cb_extraintf:get_checked() then 
-        vlc.config.set("extraintf", "luaintf")
-        vlc.config.set("lua-intf", ti_luaintf:get_text())
-    else
-        --if user uncheck the box at next start the looper doesn't work
+    if not cb_extraintf:get_checked() then 
         vlc.config.set("extraintf", "")
         cfg.first_run = true
         set_config(cfg, "SLOWSUB")
+        lb_message:set_text("Please restart VLC for changes to take effect!")
+    else
+        --if user uncheck the box at next start the looper doesn't work
+        cfg.rate = dd_rate:get_text()
+        set_config(cfg, "SLOWSUB")
     end
-    lb_message:set_text("Please restart VLC for changes to take effect!")
-end
+end    
 
 function click_CANCEL_settings()
-    trigger_menu(1)
+    dlg:delete()
 end
 
 function click_close()
@@ -139,45 +133,30 @@ function click_close()
 end
 
 -----------------------------------------
-
+--column, line
 function create_dialog()
-    dlg = vlc.dialog(descriptor().title)
-    --dlg:add_label("Time format: \\ Position:",1,1,2,1)
-    dlg:add_label("<b>Slow speed</b>",1,1,1,1)
+    dlg = vlc.dialog(descriptor().title .. " > Speed Rate")
+    dlg:add_label("Slow speed: ",1,1,1,1)
     dd_rate = dlg:add_dropdown(2,1,1,1)
         for i,v in ipairs(rateTable) do
             dd_rate:add_value(v, i)
         end
-    rateButton = dlg:add_button("Update values", click_update_rate,3,1,1,1)
+    cb_extraintf = dlg:add_check_box("Interface enabled", true,1,2,1,1)
+    dd_rate:set_text(DEFAULTRATE)
+    dlg:add_button("SAVE", click_SAVE_settings,1,3,1,1)
+    dlg:add_button("CANCEL", click_CANCEL_settings ,2,3,1,1)
 end
 
-function click_update_rate()
-    cfg.rate = dd_rate:get_text()
-    set_config(cfg, "SLOWSUB")
-end
 -----------------------------------------
     
 -----------------CHECK SUBS--------------  
 
 function create_dialog_error()
     dlg = vlc.dialog(descriptor().title .. " > ERROR")
-    w1 = dlg:add_label(html1..descriptor().title..html2.."<ol><li>Check if the file .srt has the same name of the movie and is in the same folder</li><li> Play a media before opening this extension</li><li>If the movie is already playing restart VLC for changes to take effect</li></ol>", 1, 1, 1, 1)
+    w1 = dlg:add_label(html1..descriptor().title..html2.."-Check if the file .srt has the same name of the movie and is in the same folder<br>-Play a media before opening this extension</br><br>-If the movie is already playing restart VLC for changes to take effect</br>", 1, 1, 1, 1)
     dd_close = dlg:add_button("Close", click_close,1,4,1,1)
-    --[[future implementation -> add srt file path with GUI
-    Otherwise write the .srt file's path (/path/to/file.srt) in this label and update the info
-    new_path = dlg:add_text_input("",1,2,1,1)
-    dd_path = dlg:add_button("Update path", click_update_path,1,3,1,1)
-    dd_close = dlg:add_button("Close", click_close,1,4,1,1)
-       ]]
 end
 
---[[ future implementation 
-function click_update_path()
-    cfg.path = new_path:get_text()
-    set_config(cfg, "SLOWSUB")
-    vlc.deactivate()
-end
-]]
 function check_subtitles()
     subtitles_uri=media_path(filename_extension) 
 -- read file
