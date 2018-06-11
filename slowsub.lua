@@ -58,8 +58,6 @@ function activate()
         cfg = config.SLOWSUB 
     end
     if cfg.first_run==nil or cfg.first_run==true then
-        cfg.first_run = false
-        set_config(cfg, "SLOWSUB")
         create_dialog_S()
     end
     if vlc.input.item() and check_subtitles() then
@@ -98,16 +96,35 @@ function trigger_menu(id)
 end
 
 -----------------------------------------
+--(x,x,x,x) = column, line, how many colums unificate,  how many line unifacate??
 function create_dialog_S()
     dlg = vlc.dialog(descriptor().title .. " > SETTINGS")
-    message = dlg:add_label(html1..descriptor().title..html2.."To run the extension SlowSub<br>a VLC loop interface needs to be activated the first time</br>.<br>Do you want to enable it now?</br>", 1, 1, 1, 1)
+    message = dlg:add_label(html1..descriptor().title..html2.."To run the extension SlowSub<br>a VLC loop interface needs to be activated the first time</br>.<br>Do you want to enable it now?</br>", 1, 1, 2, 1)
     dlg:add_button("ENABLE", click_ENABLE,1,2,1,1)
     dlg:add_button("CANCEL", click_CANCEL_settings,2,2,1,1)
+    lb_message_dialog_s = dlg:add_label("",1,3,2,1)
 end
 
 function click_ENABLE()
     vlc.config.set("extraintf", "luaintf")
     vlc.config.set("lua-intf", "slowsub_looper_intf")
+    cfg.first_run = false
+    set_config(cfg, "SLOWSUB")
+    lb_message_dialog_s:set_text("Please restart VLC for changes to take effect!")
+end
+
+function create_dialog()
+    dlg = vlc.dialog(descriptor().title .. " > Speed Rate")
+    dlg:add_label("Slow speed: ",1,1,1,1)
+    dd_rate = dlg:add_dropdown(2,1,1,1)
+        for i,v in ipairs(rateTable) do
+            dd_rate:add_value(v, i)
+        end
+    dd_rate:set_text(DEFAULTRATE)
+    cb_extraintf = dlg:add_check_box("Interface enabled", true,1,2,1,1)
+    dlg:add_button("SAVE", click_SAVE_settings,1,3,1,1)
+    dlg:add_button("CANCEL", click_CANCEL_settings ,2,3,1,1)
+    lb_message_dialog = dlg:add_label("",1,4,2,1)
 end
 
 function click_SAVE_settings()
@@ -115,12 +132,14 @@ function click_SAVE_settings()
     if not cb_extraintf:get_checked() then 
         vlc.config.set("extraintf", "")
         cfg.first_run = true
+        cfg.rate = "1"
         set_config(cfg, "SLOWSUB")
-        lb_message:set_text("Please restart VLC for changes to take effect!")
+        lb_message_dialog:set_text("Please restart VLC for changes to take effect!")
     else
         --if user uncheck the box at next start the looper doesn't work
         cfg.rate = dd_rate:get_text()
         set_config(cfg, "SLOWSUB")
+        lb_message_dialog:set_text("")
     end
 end    
 
@@ -133,19 +152,6 @@ function click_close()
 end
 
 -----------------------------------------
---column, line
-function create_dialog()
-    dlg = vlc.dialog(descriptor().title .. " > Speed Rate")
-    dlg:add_label("Slow speed: ",1,1,1,1)
-    dd_rate = dlg:add_dropdown(2,1,1,1)
-        for i,v in ipairs(rateTable) do
-            dd_rate:add_value(v, i)
-        end
-    cb_extraintf = dlg:add_check_box("Interface enabled", true,1,2,1,1)
-    dd_rate:set_text(DEFAULTRATE)
-    dlg:add_button("SAVE", click_SAVE_settings,1,3,1,1)
-    dlg:add_button("CANCEL", click_CANCEL_settings ,2,3,1,1)
-end
 
 -----------------------------------------
     
