@@ -22,12 +22,14 @@ INSTALLATION directory:
 * Mac OS X (current user): /Users/%your_name%/Library/Application Support/org.videolan.vlc/lua/intf/
 --]]----------------------------------------
 
-config={}
+
 --config.TIME={} -- subtable reserved for TIME extension
-config.SLOWSUB={} -- subtable reserved for slowsub extension
+ -- subtable reserved for slowsub extension
 --Load subs variables
-charset = "UTF-8" -- nil or "UTF-8", "ISO-8859-2", Windows-1250...
-filename_extension = "srt" -- "eng.srt", "srt-vlc", ...
+config = {}
+config.SLOWSUB = {}
+CHARSET = "Windows-1250" -- nil or "ISO-8859-2", Windows-1250...
+FILENAME_EXTENSION = "srt" -- "eng.srt", "srt-vlc", ...
 --Speed video variables
 MAXTIMEDIFFERENCE = 3 --Time in seconds
     
@@ -37,19 +39,19 @@ function load_subtitles()
     --future implementation
     --get_config()
     --if config.SLOWSUB.path then subtitles_uri = config.SLOWSUB.path end
-    local subtitles_uri = media_path(filename_extension) 
+    local subtitles_uri = media_path(FILENAME_EXTENSION) 
     -- read file subtitles_uri
     local s = vlc.stream(subtitles_uri)
     if s==nil then 
         return false 
     end
     --Read max 500000 chars -> enough
-    data = s:read(500000)
+    local data = s:read(500000)
     --replace the "\r" char with an empty char
     data = string.gsub( data, "\r", "")
     -- UTF-8 BOM detection
     if string.char(0xEF,0xBB,0xBF)==string.sub(data,1,3) then 
-        charset=nil 
+        CHARSET=nil 
     end
     -- parse datavlc.object.
     subtitles={}
@@ -60,8 +62,8 @@ function load_subtitles()
         if text=="" then 
             text=" " 
         end
-        if charset~=nil then 
-            text=vlc.strings.from_charset(charset, text) 
+        if CHARSET~=nil then 
+            text=vlc.strings.from_charset(CHARSET, text) 
         end
         --Add value start/stop time and text in the table subtitles
         table.insert(subtitles,{format_time(h1, m1, s1, ms1), format_time(h2, m2, s2, ms2), text})
@@ -157,8 +159,8 @@ end
 
 function get_elapsed_time()
     local input = vlc.object.input()
-    --VLC 3 : elapsed_time must be divided by 1000000
-    --VLC2.1+ : Don't need the division 
+    --VLC 3 : elapsed_time must be divided by 1000000 -> to seconds
+    --VLC2.1+ : Don't need the division -> already in seconds
     local elapsed_time = vlc.var.get(input, "time") / 1000000
 
     return elapsed_time
@@ -186,14 +188,13 @@ end
 function looper()
     local last_index = 1
     local curi=nil
-
+    --local config = {}
     while true do
         if vlc.volume.get() == -256 then -- inspired by syncplay.lua; kills vlc.exe process in Task Manager
             break 
         end  
+        ---config = get_config()
         get_config()
-        --config.SLOWSUB={time_format="[E1]",osd_position="bottom-left"}
-
         if vlc.playlist.status()=="stopped" then -- no input or stopped input
             if curi then -- input stopped
                 log_msg("stopped")
@@ -245,11 +246,13 @@ function sleep(st) -- seconds
 end
 
 function get_config()
+    --local config
     local s = vlc.config.get("bookmark10")
     if not s or not string.match(s, "^config={.*}$") then 
         s = "config={}" 
     end
     assert(loadstring(s))() -- global var
+    --return config
 end
 
 --- XXX --- SLOWSUB ---
