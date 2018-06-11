@@ -78,21 +78,11 @@ function close()
 end
 
 function menu()
-    return {"Control panel", "Settings"}
+    return {"Control panel"}
 end
 
-function trigger_menu(id)
-    if id==1 then -- Control panel
-        if dlg then 
-            dlg:delete() 
-        end
-        create_dialog()
-    elseif id==2 then -- Settings
-        if dlg then 
-            dlg:delete() 
-        end
-        create_dialog_S()
-    end
+function trigger_menu()
+    create_dialog()
 end
 
 -----------------------------------------
