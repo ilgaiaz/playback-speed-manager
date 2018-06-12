@@ -36,9 +36,6 @@ MAXTIMEDIFFERENCE = 3 --Time in seconds
 
 --**********************LOAD SUBS****************************
 function load_subtitles()
-    --future implementation
-    --get_config()
-    --if config.SLOWSUB.path then subtitles_uri = config.SLOWSUB.path end
     local subtitles_uri = media_path(FILENAME_EXTENSION) 
     -- read file subtitles_uri
     local s = vlc.stream(subtitles_uri)
@@ -68,12 +65,11 @@ function load_subtitles()
         --Add value start/stop time and text in the table subtitles
         table.insert(subtitles,{format_time(h1, m1, s1, ms1), format_time(h2, m2, s2, ms2), text})
     end
-    --for future implementation
-    --if #subtitles~=0 then 
-        --return true 
-    --else 
-        --return false 
-    --end
+    if #subtitles~=0 then
+        return true
+    else
+        return false
+    end
 end
 
 function format_time(h,m,s,ms) -- time to seconds
@@ -188,7 +184,7 @@ end
 function looper()
     local last_index = 1
     local curi=nil
-    --local config = {}
+    
     while true do
         if vlc.volume.get() == -256 then -- inspired by syncplay.lua; kills vlc.exe process in Task Manager
             break 
@@ -206,21 +202,24 @@ function looper()
             if vlc.input.item() then 
                 uri=vlc.input.item():uri() 
             end
-            if not uri then --- WTF (VLC 2.1+): status playing with nil input? Stopping? O.K. in VLC 2.0.x
+            if not uri then
                 log_msg("Playlist status: " .. vlc.playlist.status())
                 sleep(0.1)
             elseif not curi or curi~=uri then -- new input (first input or changed input)
                 curi=uri
-                load_subtitles() --Update subtitles for the new video
+                subs_ready = load_subtitles() --Update subtitles for the new video
                 log_msg(curi)
             else -- current input
                 if vlc.playlist.status()=="playing" then
                     --Call the function only when the video is playing
-                    if config.SLOWSUB then 
+                    if config.SLOWSUB and subs_ready then 
                         last_index = rate_adjustment(last_index)
                         if last_index == nil then 
                             sleep(0.3) 
                         end
+                    else
+                        subs_ready = load_subtitles()
+                        sleep(0.3)
                         --vlc.msg.dbg("last_index value: "..last_index)
                     end
                     --log_msg("playing")
@@ -246,13 +245,11 @@ function sleep(st) -- seconds
 end
 
 function get_config()
-    --local config
     local s = vlc.config.get("bookmark10")
     if not s or not string.match(s, "^config={.*}$") then 
         s = "config={}" 
     end
     assert(loadstring(s))() -- global var
-    --return config
 end
 
 --- XXX --- SLOWSUB ---

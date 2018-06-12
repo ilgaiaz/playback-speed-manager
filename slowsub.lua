@@ -24,11 +24,10 @@ INSTALLATION directory:
 
 config={}
 local cfg={}
-looping_interface = "slowsub_looper_intf" -- Location: \lua\intf\slowsub_looper_intf.lua
 rateTable = {"0.9", "0.85", "0.80", "0.75", "0.70", "0.65", "0.60", "0.55", "0.50"}
 DEFAULTRATE = "0.70"
 --Check subs variables
-filename_extension = "srt" -- "eng.srt", "srt-vlc", ...
+FILENAME_EXTENSION = "srt" -- "eng.srt", "srt-vlc", ...
 html1 = "<div align=\"center\" style=\"background-color:white;\"><a style=\"font-family:Verdana;font-size:36px;font-weight:bold;color:black;background-color:white;\">"
 html2 = "</a></div>"
 
@@ -63,7 +62,7 @@ function activate()
     if vlc.input.item() and check_subtitles() then
         cfg.rate = DEFAULTRATE
         set_config(cfg, "SLOWSUB")
-        create_dialog() 
+        create_dialog()
     else
         create_dialog_error()
     end
@@ -85,11 +84,13 @@ function trigger_menu()
     create_dialog()
 end
 
+function meta_changed()
+end
 -----------------------------------------
---(x,x,x,x) = column, line, how many colums unificate,  how many line unifacate??
+--(x,x,x,x) = column, line, how many colums unify,  how many line unify??
 function create_dialog_S()
     dlg = vlc.dialog(descriptor().title .. " > SETTINGS")
-    message = dlg:add_label(html1..descriptor().title..html2.."To run the extension SlowSub<br>a VLC loop interface needs to be activated the first time</br>.<br>Do you want to enable it now?</br>", 1, 1, 2, 1)
+    message = dlg:add_label(html1..descriptor().title..html2.."To run the extension SlowSub a VLC loop interface<br>needs to be activated the first time</br>.<br>Do you want to enable it now?</br>", 1, 1, 2, 1)
     dlg:add_button("ENABLE", click_ENABLE,1,2,1,1)
     dlg:add_button("CANCEL", click_CANCEL_settings,2,2,1,1)
     lb_message_dialog_s = dlg:add_label("",1,3,2,1)
@@ -114,7 +115,7 @@ function create_dialog()
     cb_extraintf = dlg:add_check_box("Interface enabled", true,1,2,1,1)
     dlg:add_button("SAVE", click_SAVE_settings,1,3,1,1)
     dlg:add_button("CANCEL", click_CANCEL_settings ,2,3,1,1)
-    lb_message_dialog = dlg:add_label("",1,4,2,1)
+    lb_message_dialog = dlg:add_label("Uncheck and save for disable VLC loop interface",1,4,2,1)
 end
 
 function click_SAVE_settings()
@@ -129,7 +130,7 @@ function click_SAVE_settings()
         --if user uncheck the box at next start the looper doesn't work
         cfg.rate = dd_rate:get_text()
         set_config(cfg, "SLOWSUB")
-        lb_message_dialog:set_text("")
+        lb_message_dialog:set_text("Uncheck and save for disable VLC loop interface")
     end
 end    
 
@@ -149,12 +150,12 @@ end
 
 function create_dialog_error()
     dlg = vlc.dialog(descriptor().title .. " > ERROR")
-    w1 = dlg:add_label(html1..descriptor().title..html2.."-Check if the file .srt has the same name of the movie and is in the same folder<br>-Play a media before opening this extension</br><br>-If the movie is already playing restart VLC for changes to take effect</br>", 1, 1, 1, 1)
+    w1 = dlg:add_label(html1..descriptor().title..html2.."-Play a media before opening this extension<br>-Check if the file .srt has the same name of the movie and is in the same folder<br>", 1, 1, 1, 1)
     dd_close = dlg:add_button("Close", click_close,1,4,1,1)
 end
 
 function check_subtitles()
-    subtitles_uri=media_path(filename_extension) 
+    subtitles_uri=media_path(FILENAME_EXTENSION) 
 -- read file
     local s = vlc.stream(subtitles_uri)
     if s==nil then 
