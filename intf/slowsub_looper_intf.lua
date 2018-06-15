@@ -185,6 +185,11 @@ function looper()
     local last_index = 1
     local curi=nil
     
+    get_config()
+    cfg = config.SLOWSUB 
+    cfg.rate = "1"
+    set_config(cfg, "SLOWSUB")
+        
     while true do
         if vlc.volume.get() == -256 then -- inspired by syncplay.lua; kills vlc.exe process in Task Manager
             break 
@@ -250,6 +255,35 @@ function get_config()
         s = "config={}" 
     end
     assert(loadstring(s))() -- global var
+end
+
+function set_config(cfg_table, cfg_title)
+    if not cfg_table then 
+        cfg_table={} 
+    end
+    if not cfg_title then 
+        cfg_title=descriptor().title 
+    end
+    get_config()
+    config[cfg_title]=cfg_table
+    vlc.config.set("bookmark10", "config="..serialize(config))
+end
+
+function serialize(t)
+    if type(t)=="table" then
+        local s='{'
+        for k,v in pairs(t) do
+            if type(k)~='number' then 
+                k='"'..k..'"' 
+            end
+            s = s..'['..k..']='..serialize(v)..',' -- recursion
+        end
+        return s..'}'
+    elseif type(t)=="string" then
+        return string.format("%q", t)
+    else --if type(t)=="boolean" or type(t)=="number" then
+        return tostring(t)
+    end
 end
 
 --- XXX --- SLOWSUB ---
