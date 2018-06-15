@@ -60,7 +60,10 @@ function activate()
         create_dialog_S()
     end
     if vlc.input.item() and check_subtitles() then
-        cfg.rate = DEFAULTRATE
+        --cfg.rate = DEFAULTRATE
+        --set_config(cfg, "SLOWSUB")
+        cfg.rate = "1"
+        cfg.delay = "0"
         set_config(cfg, "SLOWSUB")
         create_dialog()
     else
@@ -70,6 +73,7 @@ end
 
 function deactivate()
     cfg.rate = "1"
+    cfg.delay = "0"
     set_config(cfg, "SLOWSUB")
 end
 
@@ -80,7 +84,7 @@ function menu()
     return {"Control panel"}
 end
 
-function trigger_menu()
+function trigger_menu(id)
     create_dialog()
 end
 
@@ -99,12 +103,17 @@ end
 function click_ENABLE()
     vlc.config.set("extraintf", "luaintf")
     vlc.config.set("lua-intf", "slowsub_looper_intf")
+    cfg.delay = "0"
     cfg.first_run = false
     set_config(cfg, "SLOWSUB")
     lb_message_dialog_s:set_text("Please restart VLC for changes to take effect!")
 end
 
 function create_dialog()
+    get_config()
+    --Show the last value save
+    local delay_string = config.SLOWSUB.delay
+    
     dlg = vlc.dialog(descriptor().title .. " > Speed Rate")
     dlg:add_label("Slow speed: ",1,1,1,1)
     dd_rate = dlg:add_dropdown(2,1,1,1)
@@ -112,10 +121,12 @@ function create_dialog()
             dd_rate:add_value(v, i)
         end
     dd_rate:set_text(DEFAULTRATE)
-    cb_extraintf = dlg:add_check_box("Interface enabled", true,1,2,1,1)
-    dlg:add_button("SAVE", click_SAVE_settings,1,3,1,1)
-    dlg:add_button("CANCEL", click_CANCEL_settings ,2,3,1,1)
-    lb_message_dialog = dlg:add_label("Uncheck and save for disable VLC loop interface",1,4,2,1)
+    lb_delay = dlg:add_label("Subtitles delay [s]:",1,2,1,1)
+    ti_delay = dlg:add_text_input(delay_string,2,2,1,1)
+    cb_extraintf = dlg:add_check_box("Interface enabled", true,1,3,1,1)
+    dlg:add_button("SAVE", click_SAVE_settings,1,4,1,1)
+    dlg:add_button("CANCEL", click_CANCEL_settings ,2,4,1,1)
+    lb_message_dialog = dlg:add_label("Uncheck and save for disable VLC loop interface",1,5,2,1)
 end
 
 function click_SAVE_settings()
@@ -129,9 +140,11 @@ function click_SAVE_settings()
     else
         --if user uncheck the box at next start the looper doesn't work
         cfg.rate = dd_rate:get_text()
+        cfg.delay = ti_delay:get_text()
         set_config(cfg, "SLOWSUB")
         lb_message_dialog:set_text("Uncheck and save for disable VLC loop interface")
     end
+    dlg:delete()
 end    
 
 function click_CANCEL_settings()
@@ -139,7 +152,7 @@ function click_CANCEL_settings()
 end
 
 function click_close()
-    vlc.deactivate()
+    dlg:delete()
 end
 
 -----------------------------------------
@@ -189,7 +202,7 @@ function set_config(cfg_table, cfg_title)
         cfg_table={} 
     end
     if not cfg_title then 
-        cfg_title=descriptor().title 
+        cfg_title= "SLOWSUB"
     end
     get_config()
     config[cfg_title]=cfg_table
