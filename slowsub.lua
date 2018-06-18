@@ -59,6 +59,8 @@ function activate()
         create_dialog_S()
     end
     if vlc.input.item() and check_subtitles() then
+        --cfg.rate = DEFAULTRATE
+        --set_config(cfg, "SLOWSUB")
         create_dialog()
     else
         create_dialog_error()
@@ -68,6 +70,9 @@ end
 function deactivate()
     cfg.rate = "1"
     set_config(cfg, "SLOWSUB")
+end
+
+function close()
 end
 
 function menu()
@@ -83,6 +88,8 @@ function trigger_menu(id)
     end
 end
 
+function meta_changed()
+end
 -----------------------------------------
 --(x,x,x,x) = column, line, how many colums unify,  how many line unify??
 function create_dialog_S()
