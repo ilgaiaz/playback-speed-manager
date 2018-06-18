@@ -25,7 +25,6 @@ INSTALLATION directory:
 config={}
 local cfg={}
 rateTable = {"1", "0.9", "0.85", "0.80", "0.75", "0.70", "0.65", "0.60", "0.55", "0.50"}
-DEFAULTRATE = "1"
 --Check subs variables
 FILENAME_EXTENSION = "srt" -- "eng.srt", "srt-vlc", ...
 html1 = "<div align=\"center\" style=\"background-color:white;\"><a style=\"font-family:Verdana;font-size:36px;font-weight:bold;color:black;background-color:white;\">"
@@ -111,7 +110,7 @@ function create_dialog()
         cfg = config.SLOWSUB
         dd_rate:set_text(cfg.rate)
     else
-        dd_rate:set_text(DEFAULTRATE)
+        dd_rate:set_text("1")
     end
     cb_extraintf = dlg:add_check_box("Interface enabled", true,1,3,1,1)
     dlg:add_button("SAVE", click_SAVE_settings,1,4,1,1)
