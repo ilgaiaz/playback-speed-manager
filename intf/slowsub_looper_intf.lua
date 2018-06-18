@@ -154,27 +154,14 @@ function rate_adjustment(my_index)
 end
 
 function get_elapsed_time()
-    local delay = get_subs_delay()
     local input = vlc.object.input()
     --VLC 3 : elapsed_time must be divided by 1000000 -> to seconds
     --VLC2.1+ : Don't need the division -> already in seconds
     local elapsed_time = vlc.var.get(input, "time") / 1000000
 
-    return elapsed_time + delay
+    return elapsed_time
 end
 
-function get_subs_delay()
-    local get_delay = nil 
-    if config.SLOWSUB then 
-        get_delay = tonumber(config.SLOWSUB.delay)
-    end
-    if get_delay ~= nil and type(get_delay) == "number" then
-        return get_delay
-    else
-        return 0
-    end
-end
-    
 function set_video_speed(mySpeed)
     local rateFactor = nil
     if config.SLOWSUB then 
@@ -197,7 +184,6 @@ end
 function looper()
     local last_index = 1
     local curi=nil
-    local cfg_default = {}
     
     while true do
         if vlc.volume.get() == -256 then -- inspired by syncplay.lua; kills vlc.exe process in Task Manager
