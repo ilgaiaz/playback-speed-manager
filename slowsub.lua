@@ -53,8 +53,8 @@ end
 
 function activate()
     get_config()
-    if config and config.SLOWSUB then 
-        cfg = config.SLOWSUB 
+    if config and config.SLOWSUB then
+        cfg = config.SLOWSUB
     end
     if cfg.first_run==nil or cfg.first_run==true then
         create_dialog_S()
@@ -128,7 +128,7 @@ end
 
 function click_SAVE_settings()
     --Verify the checkbox and set the config file
-    if not cb_extraintf:get_checked() then 
+    if not cb_extraintf:get_checked() then
         vlc.config.set("extraintf", "")
         cfg.first_run = true
         cfg.rate = "1"
@@ -142,7 +142,7 @@ function click_SAVE_settings()
         lb_message_dialog:set_text("Uncheck and save for disable VLC loop interface")
     end
     dlg:delete()
-end    
+end
 
 function click_CANCEL_settings()
     dlg:delete()
@@ -155,8 +155,8 @@ end
 -----------------------------------------
 
 -----------------------------------------
-    
------------------CHECK SUBS--------------  
+
+-----------------CHECK SUBS--------------
 
 function create_dialog_error()
     dlg = vlc.dialog(descriptor().title .. " > ERROR")
@@ -165,16 +165,16 @@ function create_dialog_error()
 end
 
 function check_subtitles()
-    subtitles_uri=media_path(FILENAME_EXTENSION) 
+    subtitles_uri=media_path(FILENAME_EXTENSION)
 -- read file
     local s = vlc.stream(subtitles_uri)
-    if s==nil then 
-        return false 
+    if s==nil then
+        return false
     end
     return true
 end
 
-    
+
 function media_path(extension)
     local media_uri = vlc.input.item():uri()
     media_uri = string.gsub(media_uri, "^(.*)%..-$","%1") .. "." .. extension
@@ -183,11 +183,11 @@ function media_path(extension)
 end
 
 -----------------------------------------
-        
+
 function get_config()
     local s = vlc.config.get("bookmark10")
-    if not s or not string.match(s, "^config={.*}$") then 
-        s = "config={}" 
+    if not s or not string.match(s, "^config={.*}$") then
+        s = "config={}"
     end
     --Assert : check if there is an error from function
     --Loadstring  : loadstring load a Lua chunk from a string and it only compiles the chunk and returns the compiled chunk as a function
@@ -195,11 +195,11 @@ function get_config()
 end
 
 function set_config(cfg_table, cfg_title)
-    if not cfg_table then 
-        cfg_table={} 
+    if not cfg_table then
+        cfg_table={}
     end
-    if not cfg_title then 
-        cfg_title= "SLOWSUB" 
+    if not cfg_title then
+        cfg_title= "SLOWSUB"
     end
     get_config()
     config[cfg_title]=cfg_table
@@ -210,8 +210,8 @@ function serialize(t)
     if type(t)=="table" then
         local s='{'
         for k,v in pairs(t) do
-            if type(k)~='number' then 
-                k='"'..k..'"' 
+            if type(k)~='number' then
+                k='"'..k..'"'
             end
             s = s..'['..k..']='..serialize(v)..',' -- recursion
         end
