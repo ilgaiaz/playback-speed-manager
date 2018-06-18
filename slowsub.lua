@@ -60,8 +60,8 @@ function activate()
         create_dialog_S()
     end
     if vlc.input.item() and check_subtitles() then
-        cfg.rate = "1"
-        set_config(cfg, "SLOWSUB")
+        --cfg.rate = DEFAULTRATE
+        --set_config(cfg, "SLOWSUB")
         create_dialog()
     else
         create_dialog_error()
