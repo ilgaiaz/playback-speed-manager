@@ -80,8 +80,10 @@ function menu()
     return {"Control panel"}
 end
 
-function trigger_menu()
-    create_dialog()
+function trigger_menu(id)
+    if id == 1 then 
+        create_dialog()
+    end
 end
 
 function meta_changed()
