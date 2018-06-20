@@ -75,7 +75,10 @@ function menu()
 end
 
 function trigger_menu(id)
-    if id == 1 then 
+    if dlg then
+        dlg:delete()
+    end
+    if id == 1 then
         create_dialog()
     end
 end
@@ -133,15 +136,15 @@ function click_SAVE_settings()
         set_config(cfg, "SLOWSUB")
         lb_message_dialog:set_text("Uncheck and save for disable VLC loop interface")
     end
-    dlg:delete()
+    dlg:hide()
 end
 
 function click_CANCEL_settings()
-    dlg:delete()
+    dlg:hide()
 end
 
 function click_close()
-    dlg:delete()
+    dlg:hide()
 end
 
 -----------------------------------------
