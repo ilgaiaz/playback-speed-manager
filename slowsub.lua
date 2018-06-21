@@ -22,8 +22,6 @@ INSTALLATION directory:
 * Mac OS X (current user): /Users/%your_name%/Library/Application Support/org.videolan.vlc/lua/extensions/
 --]]----------------------------------------
 
-config={}
-local cfg={}
 rateTable = {"1", "0.9", "0.85", "0.80", "0.75", "0.70", "0.65", "0.60", "0.55", "0.50"}
 --Check subs variables
 FILENAME_EXTENSION = "srt" -- "eng.srt", "srt-vlc", ...
@@ -51,16 +49,11 @@ This VLC extension slow down the rate video while a subs is on the screen.
 end
 
 function activate()
-    get_config()
-    if config and config.SLOWSUB then
-        cfg = config.SLOWSUB
-    end
-    if cfg.first_run==nil or cfg.first_run==true then
+    cfg = load_config()
+    if cfg.general.first_run then
         create_dialog_S()
     end
     if vlc.input.item() and check_subtitles() then
-        --cfg.rate = DEFAULTRATE
-        --set_config(cfg, "SLOWSUB")
         create_dialog()
     else
         create_dialog_error()
@@ -68,8 +61,8 @@ function activate()
 end
 
 function deactivate()
-    cfg.rate = "1"
-    set_config(cfg, "SLOWSUB")
+    cfg.general.rate = "1"
+    save_config(cfg)
 end
 
 function close()
@@ -109,25 +102,21 @@ end
 function click_ENABLE()
     vlc.config.set("extraintf", "luaintf")
     vlc.config.set("lua-intf", "slowsub_looper_intf")
-    cfg.first_run = false
-    set_config(cfg, "SLOWSUB")
+    cfg.general.first_run = false
+    save_config(cfg)
     lb_message_dialog_s:set_text("Please restart VLC for changes to take effect!")
 end
 
 function create_dialog()
+    cfg = load_config()
+
     dlg = vlc.dialog(descriptor().title .. " > Speed Rate")
     dlg:add_label("Slow speed: ",1,1,1,1)
     dd_rate = dlg:add_dropdown(2,1,1,1)
-        for i,v in ipairs(rateTable) do
-            dd_rate:add_value(v, i)
-        end
-    get_config()
-    if config and config.SLOWSUB then
-        cfg = config.SLOWSUB
-        dd_rate:set_text(cfg.rate)
-    else
-        dd_rate:set_text("1")
+    for i,v in ipairs(rateTable) do
+        dd_rate:add_value(v, i)
     end
+    dd_rate:set_text(cfg.general.rate)
     cb_extraintf = dlg:add_check_box("Interface enabled", true,1,3,1,1)
     dlg:add_button("SAVE", click_SAVE_settings,1,4,1,1)
     dlg:add_button("CANCEL", click_CANCEL_settings ,2,4,1,1)
@@ -138,17 +127,16 @@ function click_SAVE_settings()
     --Verify the checkbox and set the config file
     if not cb_extraintf:get_checked() then
         vlc.config.set("extraintf", "")
-        cfg.first_run = true
-        cfg.rate = "1"
-        set_config(cfg, "SLOWSUB")
+        cfg.general.first_run = true
+        cfg.general.rate = "1"
         lb_message_dialog:set_text("Please restart VLC for changes to take effect!")
     else
         --if user uncheck the box at next start the looper doesn't work
         vlc.config.set("extraintf", "luaintf")
-        cfg.rate = dd_rate:get_text()
-        set_config(cfg, "SLOWSUB")
+        cfg.general.rate = dd_rate:get_text()
         lb_message_dialog:set_text("Uncheck and save for disable VLC loop interface")
     end
+    save_config(cfg)
     dlg:hide()
 end
 
@@ -192,41 +180,70 @@ end
 
 -----------------------------------------
 
-function get_config()
-    local s = vlc.config.get("bookmark10")
-    if not s or not string.match(s, "^config={.*}$") then
-        s = "config={}"
+--- Returns a table containing all the data from the INI file.
+--@param fileName The name of the INI file to parse. [string]
+--@return The table containing all data from the INI file. [table]
+function load_config()
+    fileName = vlc.config.configdir() .. "slowsubrc"
+    assert(type(fileName) == 'string', 'Parameter "fileName" must be a string.');
+    local file = io.open(fileName, 'r')
+    if not file then
+        --, 'Error loading file :' .. fileName);
+        data = default_config();
+        save_config(data)
+        return data
     end
-    --Assert : check if there is an error from function
-    --Loadstring  : loadstring load a Lua chunk from a string and it only compiles the chunk and returns the compiled chunk as a function
-    assert(loadstring(s))() -- loads the vlcrc string in "bookmark10" (like a refresh after modified) ??
-end
-
-function set_config(cfg_table, cfg_title)
-    if not cfg_table then
-        cfg_table={}
-    end
-    if not cfg_title then
-        cfg_title= "SLOWSUB"
-    end
-    get_config()
-    config[cfg_title]=cfg_table
-    vlc.config.set("bookmark10", "config="..serialize(config))
-end
-
-function serialize(t)
-    if type(t)=="table" then
-        local s='{'
-        for k,v in pairs(t) do
-            if type(k)~='number' then
-                k='"'..k..'"'
-            end
-            s = s..'['..k..']='..serialize(v)..',' -- recursion
+    local data = {};
+    local section;
+    for line in file:lines() do
+        local tempSection = line:match('^%[([^%[%]]+)%]$');
+        if(tempSection)then
+            section = tonumber(tempSection) and tonumber(tempSection) or tempSection;
+            data[section] = data[section] or {};
         end
-        return s..'}'
-    elseif type(t)=="string" then
-        return string.format("%q", t)
-    else --if type(t)=="boolean" or type(t)=="number" then
-        return tostring(t)
+        local param, value = line:match('^([%w|_]+)%s-=%s-(.+)$');
+        if(param and value ~= nil)then
+            if(tonumber(value))then
+                value = tonumber(value);
+            elseif(value == 'true')then
+                value = true;
+            elseif(value == 'false')then
+                value = false;
+            end
+            if(tonumber(param))then
+                param = tonumber(param);
+            end
+            data[section][param] = value;
+        end
     end
+    file:close();
+    return data;
+end
+
+--- Saves all the data from a table to an INI file.
+--@param fileName The name of the INI file to fill. [string]
+--@param data The table containing all the data to store. [table]
+function save_config(data)
+    fileName = vlc.config.configdir() .. "slowsubrc"
+    assert(type(fileName) == 'string', 'Parameter "fileName" must be a string.');
+    assert(type(data) == 'table', 'Parameter "data" must be a table.');
+    local file = assert(io.open(fileName, 'w+b'), 'Error loading file :' .. fileName);
+    local contents = '';
+    for section, param in pairs(data) do
+        contents = contents .. ('[%s]\n'):format(section);
+        for key, value in pairs(param) do
+            contents = contents .. ('%s=%s\n'):format(key, tostring(value));
+        end
+        contents = contents .. '\n';
+    end
+    file:write(contents);
+    file:close();
+end
+
+function default_config()
+    local data = {}
+    data.general = {}
+    data.general.first_run = true
+    data.general.rate = 1
+    return data
 end

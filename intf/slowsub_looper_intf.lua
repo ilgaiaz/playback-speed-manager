@@ -26,8 +26,6 @@ INSTALLATION directory:
 --config.TIME={} -- subtable reserved for TIME extension
  -- subtable reserved for slowsub extension
 --Load subs variables
-config = {}
-config.SLOWSUB = {}
 CHARSET = "Windows-1250" -- nil or "ISO-8859-2", Windows-1250...
 FILENAME_EXTENSION = "srt" -- "eng.srt", "srt-vlc", ...
 --Speed video variables
@@ -164,11 +162,8 @@ end
 
 function set_video_speed(mySpeed)
     local rateFactor = nil
-    if config.SLOWSUB then
-        rateFactor = tonumber(config.SLOWSUB.rate)
-    else
-        return
-    end
+
+    rateFactor = tonumber(cfg.general.rate)
     if rateFactor ~= nil then
         --vlc.msg.dbg("updateRate: ".. rateFactor .. type(rateFactor))
         return mySpeed * rateFactor
@@ -184,18 +179,16 @@ end
 function looper()
     local last_index = 1
     local curi=nil
-    
-    get_config()
-    cfg = config.SLOWSUB
-    cfg.rate = "1"
-    set_config(cfg, "SLOWSUB")
+
+    cfg = load_config()
+    cfg.general.rate = 1
+    save_config(cfg)
 
     while true do
         if vlc.volume.get() == -256 then -- inspired by syncplay.lua; kills vlc.exe process in Task Manager
             break
         end
-        ---config = get_config()
-        get_config()
+        cfg = load_config()
         if vlc.playlist.status()=="stopped" then -- no input or stopped input
             if curi then -- input stopped
                 log_msg("stopped")
@@ -217,7 +210,7 @@ function looper()
             else -- current input
                 if vlc.playlist.status()=="playing" then
                     --Call the function only when the video is playing
-                    if config.SLOWSUB and subs_ready then
+                    if subs_ready then
                         last_index = rate_adjustment(last_index)
                         if last_index == nil then
                             sleep(0.3)
@@ -249,47 +242,73 @@ function sleep(st) -- seconds
     vlc.misc.mwait(vlc.misc.mdate() + st*1000000)
 end
 
-function get_config()
-    local s = vlc.config.get("bookmark10")
-    if not s or not string.match(s, "^config={.*}$") then
-        s = "config={}"
+--- Returns a table containing all the data from the INI file.
+--@param fileName The name of the INI file to parse. [string]
+--@return The table containing all data from the INI file. [table]
+function load_config()
+    fileName = vlc.config.configdir() .. "slowsubrc"
+    assert(type(fileName) == 'string', 'Parameter "fileName" must be a string.');
+    local file = io.open(fileName, 'r')
+    if not file then
+        --, 'Error loading file :' .. fileName);
+        data = default_config();
+        save_config(data)
+        return data
     end
-    assert(loadstring(s))() -- global var
-end
-
-function set_config(cfg_table, cfg_title)
-    if not cfg_table then
-        cfg_table={}
-    end
-    if not cfg_title then
-        cfg_title=descriptor().title
-    end
-    get_config()
-    config[cfg_title]=cfg_table
-    vlc.config.set("bookmark10", "config="..serialize(config))
-end
-
-function serialize(t)
-    if type(t)=="table" then
-        local s='{'
-        for k,v in pairs(t) do
-            if type(k)~='number' then
-                k='"'..k..'"'
-            end
-            s = s..'['..k..']='..serialize(v)..',' -- recursion
+    local data = {};
+    local section;
+    for line in file:lines() do
+        local tempSection = line:match('^%[([^%[%]]+)%]$');
+        if(tempSection)then
+            section = tonumber(tempSection) and tonumber(tempSection) or tempSection;
+            data[section] = data[section] or {};
         end
-        return s..'}'
-    elseif type(t)=="string" then
-        return string.format("%q", t)
-    else --if type(t)=="boolean" or type(t)=="number" then
-        return tostring(t)
+        local param, value = line:match('^([%w|_]+)%s-=%s-(.+)$');
+        if(param and value ~= nil)then
+            if(tonumber(value))then
+                value = tonumber(value);
+            elseif(value == 'true')then
+                value = true;
+            elseif(value == 'false')then
+                value = false;
+            end
+            if(tonumber(param))then
+                param = tonumber(param);
+            end
+            data[section][param] = value;
+        end
     end
+    file:close();
+    return data;
 end
 
---- XXX --- SLOWSUB ---
+--- Saves all the data from a table to an INI file.
+--@param fileName The name of the INI file to fill. [string]
+--@param data The table containing all the data to store. [table]
+function save_config(data)
+    fileName = vlc.config.configdir() .. "slowsubrc"
+    assert(type(fileName) == 'string', 'Parameter "fileName" must be a string.');
+    assert(type(data) == 'table', 'Parameter "data" must be a table.');
+    local file = assert(io.open(fileName, 'w+b'), 'Error loading file :' .. fileName);
+    local contents = '';
+    for section, param in pairs(data) do
+        contents = contents .. ('[%s]\n'):format(section);
+        for key, value in pairs(param) do
+            contents = contents .. ('%s=%s\n'):format(key, tostring(value));
+        end
+        contents = contents .. '\n';
+    end
+    file:write(contents);
+    file:close();
+end
 
---future implementation check if sub file is ready
---get_config()
---subs_ready = config.SLOWSUB.ready == false
---add a loop until video start'
+function default_config()
+    local data = {}
+    data.general = {}
+    data.general.first_run = true
+    data.general.rate = 1
+    return data
+end
+--- MAIN ---
+
 looper()
