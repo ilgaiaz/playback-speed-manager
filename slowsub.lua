@@ -80,9 +80,7 @@ function menu()
 end
 
 function trigger_menu(id)
-    if dlg then
-        dlg:delete()
-    end
+    close_dialog()
     if id == 1 then
         create_dialog()
     end
@@ -91,6 +89,14 @@ end
 function meta_changed()
 end
 -----------------------------------------
+
+function close_dialog()
+    if dlg then
+        dlg:delete()
+        dlg = nil
+    end
+end
+
 --(x,x,x,x) = column, line, how many colums unify,  how many line unify??
 function create_dialog_S()
     dlg = vlc.dialog(descriptor().title .. " > SETTINGS")
