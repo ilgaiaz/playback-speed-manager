@@ -63,6 +63,9 @@ function deactivate()
 end
 
 function close()
+    if dlg_id == 1 then
+        vlc.deactivate()
+    end
 end
 
 function menu()
@@ -89,6 +92,7 @@ end
 
 --(x,x,x,x) = column, line, how many colums unify,  how many line unify??
 function create_dialog_S()
+    dlg_id = 1
     close_dialog()
     dlg = vlc.dialog(descriptor().title .. " > First run")
     message = dlg:add_label("To run the extension SlowSub a VLC loop interface needs to<br>be activated the first time. Do you want to enable it now?", 1, 1, 2, 1)
@@ -140,10 +144,9 @@ end
 
 function click_CANCEL_settings()
     dlg:hide()
-end
-
-function click_close()
-    dlg:hide()
+    if dlg_id == 1 then
+        vlc.deactivate()
+    end
 end
 
 -----------------------------------------
