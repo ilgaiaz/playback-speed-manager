@@ -47,7 +47,7 @@ end
 
 function activate()
     cfg = load_config()
-    if cfg.general.first_run then
+    if cfg.status.first_run then
         create_dialog_S()
     end
     if vlc.input.item() and check_subtitles() then
@@ -103,7 +103,7 @@ end
 function click_ENABLE()
     vlc.config.set("extraintf", "luaintf")
     vlc.config.set("lua-intf", "slowsub_looper_intf")
-    cfg.general.first_run = false
+    cfg.status.first_run = false
     save_config(cfg)
     lb_message_dialog_s:set_text("Please restart VLC for changes to take effect!")
 end
@@ -129,7 +129,7 @@ function click_SAVE_settings()
     --Verify the checkbox and set the config file
     if not cb_extraintf:get_checked() then
         vlc.config.set("extraintf", "")
-        cfg.general.first_run = true
+        cfg.status.first_run = true
         cfg.general.rate = "1"
         lb_message_dialog:set_text("Please restart VLC for changes to take effect!")
     else
@@ -248,7 +248,8 @@ end
 function default_config()
     local data = {}
     data.general = {}
-    data.general.first_run = true
     data.general.rate = 1
+    data.status = {}
+    data.status.first_run = true
     return data
 end

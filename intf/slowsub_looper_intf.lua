@@ -305,8 +305,9 @@ end
 function default_config()
     local data = {}
     data.general = {}
-    data.general.first_run = true
     data.general.rate = 1
+    data.status = {}
+    data.status.first_run = true
     return data
 end
 --- MAIN ---
