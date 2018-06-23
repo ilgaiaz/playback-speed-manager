@@ -119,8 +119,8 @@ function create_dialog()
     log_msg("Current rate: " .. cfg.general.rate) -- This log adds enough delay to avoid the set_text to not fail
     dd_rate:set_text(cfg.general.rate)
     cb_extraintf = dlg:add_check_box("Interface enabled", true,1,3,1,1)
-    dlg:add_button("SAVE", click_SAVE_settings,1,4,1,1)
-    dlg:add_button("CANCEL", click_CANCEL_settings ,2,4,1,1)
+    dlg:add_button("Save", click_SAVE_settings,1,4,1,1)
+    dlg:add_button("Cancel", click_CANCEL_settings ,2,4,1,1)
     lb_message_dialog = dlg:add_label("Uncheck and save for disable VLC loop interface",1,5,2,1)
 end
 
