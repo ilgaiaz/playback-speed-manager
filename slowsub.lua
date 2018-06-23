@@ -74,7 +74,7 @@ function close()
 end
 
 function menu()
-    return {"Control panel"}
+    return {"Settings"}
 end
 
 function trigger_menu(id)
