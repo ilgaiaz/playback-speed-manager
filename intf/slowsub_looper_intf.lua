@@ -182,6 +182,7 @@ function looper()
 
     cfg = load_config()
     cfg.general.rate = 1
+    cfg.status.restarted = true
     save_config(cfg)
 
     while true do
@@ -305,8 +306,10 @@ end
 function default_config()
     local data = {}
     data.general = {}
-    data.general.first_run = true
     data.general.rate = 1
+    data.status = {}
+    data.status.first_run = true
+    data.status.restarted = true
     return data
 end
 --- MAIN ---

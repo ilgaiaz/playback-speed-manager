@@ -25,9 +25,6 @@ INSTALLATION directory:
 rateTable = {"1", "0.9", "0.85", "0.80", "0.75", "0.70", "0.65", "0.60", "0.55", "0.50"}
 --Check subs variables
 FILENAME_EXTENSION = "srt" -- "eng.srt", "srt-vlc", ...
-html1 = "<div align=\"center\" style=\"background-color:white;\"><a style=\"font-family:Verdana;font-size:36px;font-weight:bold;color:black;background-color:white;\">"
-html2 = "</a></div>"
-
 
 function descriptor()
     return {
@@ -50,8 +47,13 @@ end
 
 function activate()
     cfg = load_config()
-    if cfg.general.first_run then
+    if not cfg.status.restarted then
+        create_dialog_restart()
+        return
+    end
+    if cfg.status.first_run then
         create_dialog_S()
+        return
     end
     if vlc.input.item() and check_subtitles() then
         create_dialog()
@@ -66,6 +68,9 @@ function deactivate()
 end
 
 function close()
+    if dlg_id == 1 or dlg_id == 3 then
+        vlc.deactivate()
+    end
 end
 
 function menu()
@@ -92,19 +97,30 @@ end
 
 --(x,x,x,x) = column, line, how many colums unify,  how many line unify??
 function create_dialog_S()
-    dlg = vlc.dialog(descriptor().title .. " > SETTINGS")
-    message = dlg:add_label(html1..descriptor().title..html2.."To run the extension SlowSub a VLC loop interface<br>needs to be activated the first time</br>.<br>Do you want to enable it now?</br>", 1, 1, 2, 1)
-    dlg:add_button("ENABLE", click_ENABLE,1,2,1,1)
-    dlg:add_button("CANCEL", click_CANCEL_settings,2,2,1,1)
-    lb_message_dialog_s = dlg:add_label("",1,3,2,1)
+    dlg_id = 1
+    close_dialog()
+    dlg = vlc.dialog(descriptor().title .. " > First run")
+    message = dlg:add_label("To run the extension SlowSub a VLC loop interface needs to<br>be activated the first time. Do you want to enable it now?", 1, 1, 2, 1)
+    dlg:add_button("Enable", click_ENABLE,1,2,1,1)
+    dlg:add_button("Cancel", click_CANCEL_settings,2,2,1,1)
+end
+
+function create_dialog_restart()
+    close_dialog()
+    dlg_id = 3
+    dlg = vlc.dialog(descriptor().title .. " > Restart required")
+    message = dlg:add_label("VLC needs to be restarted to use the Slow Sub extension.", 1, 1, 5, 1)
+    dlg:add_button("Ok", click_CANCEL_settings,3,2,1,1)
 end
 
 function click_ENABLE()
     vlc.config.set("extraintf", "luaintf")
     vlc.config.set("lua-intf", "slowsub_looper_intf")
-    cfg.general.first_run = false
+    cfg.status.first_run = false
+    cfg.status.restarted = false
     save_config(cfg)
-    lb_message_dialog_s:set_text("Please restart VLC for changes to take effect!")
+    dlg:hide()
+    vlc.deactivate()
 end
 
 function create_dialog()
@@ -128,7 +144,7 @@ function click_SAVE_settings()
     --Verify the checkbox and set the config file
     if not cb_extraintf:get_checked() then
         vlc.config.set("extraintf", "")
-        cfg.general.first_run = true
+        cfg.status.first_run = true
         cfg.general.rate = "1"
         lb_message_dialog:set_text("Please restart VLC for changes to take effect!")
     else
@@ -143,10 +159,9 @@ end
 
 function click_CANCEL_settings()
     dlg:hide()
-end
-
-function click_close()
-    dlg:hide()
+    if dlg_id == 1 or dlg_id == 3 then
+        vlc.deactivate()
+    end
 end
 
 -----------------------------------------
@@ -248,7 +263,9 @@ end
 function default_config()
     local data = {}
     data.general = {}
-    data.general.first_run = true
     data.general.rate = 1
+    data.status = {}
+    data.status.first_run = true
+    data.status.restarted = true
     return data
 end
