@@ -49,6 +49,7 @@ function activate()
     cfg = load_config()
     if cfg.status.first_run then
         create_dialog_S()
+        return
     end
     if vlc.input.item() and check_subtitles() then
         create_dialog()
