@@ -235,7 +235,7 @@ function looper()
 end
 
 function log_msg(lm)
-    vlc.msg.info("[looper_intf] " .. lm)
+    vlc.msg.info("[Slowsub looper_intf] " .. lm)
 end
 
 function sleep(st) -- seconds

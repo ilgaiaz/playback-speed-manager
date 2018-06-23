@@ -178,6 +178,10 @@ function media_path(extension)
     return media_uri
 end
 
+function log_msg(lm)
+    vlc.msg.info("[Slowsub config interface] " .. lm)
+end
+
 -----------------------------------------
 
 --- Returns a table containing all the data from the INI file.
