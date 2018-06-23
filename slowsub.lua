@@ -47,6 +47,10 @@ end
 
 function activate()
     cfg = load_config()
+    if not cfg.status.restarted then
+        create_dialog_restart()
+        return
+    end
     if cfg.status.first_run then
         create_dialog_S()
         return
@@ -64,7 +68,7 @@ function deactivate()
 end
 
 function close()
-    if dlg_id == 1 then
+    if dlg_id == 1 or dlg_id == 3 then
         vlc.deactivate()
     end
 end
@@ -101,10 +105,19 @@ function create_dialog_S()
     dlg:add_button("Cancel", click_CANCEL_settings,2,2,1,1)
 end
 
+function create_dialog_restart()
+    close_dialog()
+    dlg_id = 3
+    dlg = vlc.dialog(descriptor().title .. " > Restart required")
+    message = dlg:add_label("VLC needs to be restarted to use the Slow Sub extension.", 1, 1, 5, 1)
+    dlg:add_button("Ok", click_CANCEL_settings,3,2,1,1)
+end
+
 function click_ENABLE()
     vlc.config.set("extraintf", "luaintf")
     vlc.config.set("lua-intf", "slowsub_looper_intf")
     cfg.status.first_run = false
+    cfg.status.restarted = false
     save_config(cfg)
     dlg:hide()
     vlc.deactivate()
@@ -146,7 +159,7 @@ end
 
 function click_CANCEL_settings()
     dlg:hide()
-    if dlg_id == 1 then
+    if dlg_id == 1 or dlg_id == 3 then
         vlc.deactivate()
     end
 end
@@ -253,5 +266,6 @@ function default_config()
     data.general.rate = 1
     data.status = {}
     data.status.first_run = true
+    data.status.restarted = true
     return data
 end
