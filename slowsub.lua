@@ -25,9 +25,6 @@ INSTALLATION directory:
 rateTable = {"1", "0.9", "0.85", "0.80", "0.75", "0.70", "0.65", "0.60", "0.55", "0.50"}
 --Check subs variables
 FILENAME_EXTENSION = "srt" -- "eng.srt", "srt-vlc", ...
-html1 = "<div align=\"center\" style=\"background-color:white;\"><a style=\"font-family:Verdana;font-size:36px;font-weight:bold;color:black;background-color:white;\">"
-html2 = "</a></div>"
-
 
 function descriptor()
     return {
@@ -92,11 +89,11 @@ end
 
 --(x,x,x,x) = column, line, how many colums unify,  how many line unify??
 function create_dialog_S()
-    dlg = vlc.dialog(descriptor().title .. " > SETTINGS")
-    message = dlg:add_label(html1..descriptor().title..html2.."To run the extension SlowSub a VLC loop interface<br>needs to be activated the first time</br>.<br>Do you want to enable it now?</br>", 1, 1, 2, 1)
-    dlg:add_button("ENABLE", click_ENABLE,1,2,1,1)
-    dlg:add_button("CANCEL", click_CANCEL_settings,2,2,1,1)
-    lb_message_dialog_s = dlg:add_label("",1,3,2,1)
+    close_dialog()
+    dlg = vlc.dialog(descriptor().title .. " > First run")
+    message = dlg:add_label("To run the extension SlowSub a VLC loop interface needs to<br>be activated the first time. Do you want to enable it now?", 1, 1, 2, 1)
+    dlg:add_button("Enable", click_ENABLE,1,2,1,1)
+    dlg:add_button("Cancel", click_CANCEL_settings,2,2,1,1)
 end
 
 function click_ENABLE()
