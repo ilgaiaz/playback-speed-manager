@@ -105,7 +105,8 @@ function click_ENABLE()
     vlc.config.set("lua-intf", "slowsub_looper_intf")
     cfg.status.first_run = false
     save_config(cfg)
-    lb_message_dialog_s:set_text("Please restart VLC for changes to take effect!")
+    dlg:hide()
+    vlc.deactivate()
 end
 
 function create_dialog()
