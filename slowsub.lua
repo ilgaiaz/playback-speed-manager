@@ -124,20 +124,20 @@ function click_ENABLE()
 end
 
 function create_dialog()
+    dlg_id = 2
     cfg = load_config()
 
-    dlg = vlc.dialog(descriptor().title .. " > Speed Rate")
+    dlg = vlc.dialog(descriptor().title .. " > Settings")
     dlg:add_label("Slow speed: ",1,1,1,1)
-    dd_rate = dlg:add_dropdown(2,1,1,1)
+    dd_rate = dlg:add_dropdown(2,1,2,1)
     for i,v in ipairs(rateTable) do
         dd_rate:add_value(v, i)
     end
     log_msg("Current rate: " .. cfg.general.rate) -- This log adds enough delay to avoid the set_text to not fail
     dd_rate:set_text(cfg.general.rate)
     cb_extraintf = dlg:add_check_box("Interface enabled", true,1,3,1,1)
-    dlg:add_button("Save", click_SAVE_settings,1,4,1,1)
-    dlg:add_button("Cancel", click_CANCEL_settings ,2,4,1,1)
-    lb_message_dialog = dlg:add_label("Uncheck and save for disable VLC loop interface",1,5,2,1)
+    dlg:add_button("Save", click_SAVE_settings,2,4,1,1)
+    dlg:add_button("Cancel", click_CANCEL_settings ,3,4,1,1)
 end
 
 function click_SAVE_settings()
@@ -146,12 +146,13 @@ function click_SAVE_settings()
         vlc.config.set("extraintf", "")
         cfg.status.first_run = true
         cfg.general.rate = "1"
-        lb_message_dialog:set_text("Please restart VLC for changes to take effect!")
+        save_config(cfg)
+        vlc.deactivate()
+        return
     else
         --if user uncheck the box at next start the looper doesn't work
         vlc.config.set("extraintf", "luaintf")
         cfg.general.rate = dd_rate:get_text()
-        lb_message_dialog:set_text("Uncheck and save for disable VLC loop interface")
     end
     save_config(cfg)
     dlg:hide()
