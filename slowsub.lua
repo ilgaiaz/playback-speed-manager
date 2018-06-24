@@ -26,6 +26,10 @@ rateTable = {"1", "0.9", "0.85", "0.80", "0.75", "0.70", "0.65", "0.60", "0.55",
 --Check subs variables
 FILENAME_EXTENSION = "srt" -- "eng.srt", "srt-vlc", ...
 
+DIALOG_ENABLE = 1
+DIALOG_RESTART = 2
+DIALOG_SETTINGS = 3
+
 function descriptor()
     return {
         title = "Slow Sub";
@@ -68,7 +72,7 @@ function deactivate()
 end
 
 function close()
-    if dlg_id == 1 or dlg_id == 3 then
+    if dlg_id == DIALOG_ENABLE or dlg_id == DIALOG_RESTART then
         vlc.deactivate()
     end
 end
@@ -97,7 +101,7 @@ end
 
 --(x,x,x,x) = column, line, how many colums unify,  how many line unify??
 function create_dialog_S()
-    dlg_id = 1
+    dlg_id = DIALOG_ENABLE
     close_dialog()
     dlg = vlc.dialog(descriptor().title .. " > First run")
     message = dlg:add_label("To run the extension SlowSub a VLC loop interface needs to<br>be activated the first time. Do you want to enable it now?", 1, 1, 2, 1)
@@ -107,7 +111,7 @@ end
 
 function create_dialog_restart()
     close_dialog()
-    dlg_id = 3
+    dlg_id = DIALOG_RESTART
     dlg = vlc.dialog(descriptor().title .. " > Restart required")
     message = dlg:add_label("VLC needs to be restarted to use the Slow Sub extension.", 1, 1, 5, 1)
     dlg:add_button("Ok", click_CANCEL_settings,3,2,1,1)
@@ -124,7 +128,7 @@ function click_ENABLE()
 end
 
 function create_dialog()
-    dlg_id = 2
+    dlg_id = DIALOG_SETTINGS
     cfg = load_config()
 
     dlg = vlc.dialog(descriptor().title .. " > Settings")
@@ -160,7 +164,7 @@ end
 
 function click_CANCEL_settings()
     dlg:hide()
-    if dlg_id == 1 or dlg_id == 3 then
+    if dlg_id == DIALOG_ENABLE or dlg_id == DIALOG_RESTART then
         vlc.deactivate()
     end
 end
