@@ -134,7 +134,7 @@ function create_dialog()
         dd_rate:add_value(v, i)
     end
     log_msg("Current rate: " .. cfg.general.rate) -- This log adds enough delay to avoid the set_text to not fail
-    dd_rate:set_text(cfg.general.rate)
+    dd_rate:set_text(tostring(cfg.general.rate))
     cb_extraintf = dlg:add_check_box("Interface enabled", true,1,3,1,1)
     dlg:add_button("Save", click_SAVE_settings,2,4,1,1)
     dlg:add_button("Cancel", click_CANCEL_settings ,3,4,1,1)
