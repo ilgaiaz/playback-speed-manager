@@ -57,7 +57,11 @@ function activate()
         create_dialog_S()
         return
     end
-    create_dialog()
+    if vlc.input.item() and check_subtitles() then
+        create_dialog()
+    else
+        create_dialog_error()
+    end
 end
 
 function deactivate()
@@ -169,6 +173,11 @@ end
 
 -----------------CHECK SUBS--------------
 
+function create_dialog_error()
+    dlg = vlc.dialog(descriptor().title .. " > ERROR")
+    w1 = dlg:add_label(html1..descriptor().title..html2.."-Play a media before opening this extension<br>-Check if the file .srt has the same name of the movie and is in the same folder<br>", 1, 1, 1, 1)
+    dd_close = dlg:add_button("Close", click_close,1,4,1,1)
+end
 
 function check_subtitles()
     subtitles_uri=media_path("srt")
