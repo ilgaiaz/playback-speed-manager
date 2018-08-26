@@ -23,8 +23,6 @@ INSTALLATION directory:
 --]]----------------------------------------
 
 rateTable = {"1", "0.9", "0.85", "0.80", "0.75", "0.70", "0.65", "0.60", "0.55", "0.50"}
---Check subs variables
-FILENAME_EXTENSION = "srt" -- "eng.srt", "srt-vlc", ...
 
 DIALOG_ENABLE = 1
 DIALOG_RESTART = 2
@@ -173,7 +171,7 @@ end
 
 
 function check_subtitles()
-    subtitles_uri=media_path(FILENAME_EXTENSION)
+    subtitles_uri=media_path("srt")
 -- read file
     local s = vlc.stream(subtitles_uri)
     if s==nil then
