@@ -126,14 +126,14 @@ function create_dialog()
     cfg = load_config()
 
     dlg = vlc.dialog(descriptor().title .. " > Settings")
-    dlg:add_label("Slow speed: ",1,1,1,1)
+    dlg:add_label("Playback speed: ",1,1,1,1)
     dd_rate = dlg:add_dropdown(2,1,2,1)
     for i,v in ipairs(rateTable) do
         dd_rate:add_value(v, i)
     end
     log_msg("Current rate: " .. cfg.general.rate) -- This log adds enough delay to avoid the set_text to not fail
     dd_rate:set_text(tostring(cfg.general.rate))
-    cb_extraintf = dlg:add_check_box("Interface enabled", true,1,3,1,1)
+    cb_extraintf = dlg:add_check_box("Loop interface enabled", true,1,3,1,1)
     dlg:add_button("Save", click_SAVE_settings,2,4,1,1)
     dlg:add_button("Cancel", click_CANCEL_settings ,3,4,1,1)
 end
