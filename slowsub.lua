@@ -28,6 +28,7 @@ DIALOG_ENABLE = 1
 DIALOG_RESTART = 2
 DIALOG_SETTINGS = 3
 
+---------------- Standard VLC extension functions that must/can be implemented ---------------------
 function descriptor()
     return {
         title = "Slow Sub";
@@ -61,6 +62,7 @@ function deactivate()
     save_config(cfg)
 end
 
+--- Called when a dialog is closed with the X button
 function close()
     if dlg_id == DIALOG_ENABLE or dlg_id == DIALOG_RESTART then
         vlc.deactivate()
@@ -80,7 +82,8 @@ end
 
 function meta_changed()
 end
------------------------------------------
+
+---------------------------- Functions specific to this extension ----------------------------------
 
 function close_dialog()
     if dlg then
