@@ -50,10 +50,10 @@ function activate()
         return
     end
     if cfg.status.first_run then
-        create_dialog_S()
+        create_dialog_enable_extension()
         return
     end
-    create_dialog()
+    create_dialog_settings()
 end
 
 function deactivate()
@@ -74,7 +74,7 @@ end
 function trigger_menu(id)
     close_dialog()
     if id == 1 then
-        create_dialog()
+        create_dialog_settings()
     end
 end
 
@@ -90,7 +90,7 @@ function close_dialog()
 end
 
 --(x,x,x,x) = column, line, how many colums unify,  how many line unify??
-function create_dialog_S()
+function create_dialog_enable_extension()
     dlg_id = DIALOG_ENABLE
     close_dialog()
     dlg = vlc.dialog(descriptor().title .. " > First run")
@@ -117,7 +117,7 @@ function click_ENABLE()
     vlc.deactivate()
 end
 
-function create_dialog()
+function create_dialog_settings()
     dlg_id = DIALOG_SETTINGS
     cfg = load_config()
 
