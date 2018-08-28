@@ -85,6 +85,10 @@ end
 
 ---------------------------- Functions specific to this extension ----------------------------------
 
+function log_msg(lm)
+    vlc.msg.info("[Slowsub config interface] " .. lm)
+end
+
 function close_dialog()
     if dlg then
         dlg:delete()
@@ -109,16 +113,6 @@ function create_dialog_restart()
     dlg:add_button("Ok", on_click_cancel,3,2,1,1)
 end
 
-function on_click_enable()
-    vlc.config.set("extraintf", "luaintf")
-    vlc.config.set("lua-intf", "slowsub_looper_intf")
-    cfg.status.first_run = false
-    cfg.status.restarted = false
-    save_config(cfg)
-    dlg:hide()
-    vlc.deactivate()
-end
-
 function create_dialog_settings()
     dlg_id = DIALOG_SETTINGS
     cfg = load_config()
@@ -135,6 +129,23 @@ function create_dialog_settings()
     cb_extraintf = dlg:add_check_box("Loop interface enabled", true,1,3,1,1)
     dlg:add_button("Save", on_click_save,2,4,1,1)
     dlg:add_button("Cancel", on_click_cancel ,3,4,1,1)
+end
+
+function on_click_cancel()
+    dlg:hide()
+    if dlg_id == DIALOG_ENABLE or dlg_id == DIALOG_RESTART then
+        vlc.deactivate()
+    end
+end
+
+function on_click_enable()
+    vlc.config.set("extraintf", "luaintf")
+    vlc.config.set("lua-intf", "slowsub_looper_intf")
+    cfg.status.first_run = false
+    cfg.status.restarted = false
+    save_config(cfg)
+    dlg:hide()
+    vlc.deactivate()
 end
 
 function on_click_save()
@@ -155,24 +166,7 @@ function on_click_save()
     dlg:hide()
 end
 
-function on_click_cancel()
-    dlg:hide()
-    if dlg_id == DIALOG_ENABLE or dlg_id == DIALOG_RESTART then
-        vlc.deactivate()
-    end
-end
-
------------------------------------------
-
------------------------------------------
-
------------------CHECK SUBS--------------
-
-function log_msg(lm)
-    vlc.msg.info("[Slowsub config interface] " .. lm)
-end
-
------------------------------------------
+---------------------------- Config management functions -------------------------------------------
 
 --- Returns a table containing all the data from the INI file.
 --@param fileName The name of the INI file to parse. [string]
