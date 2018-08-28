@@ -152,16 +152,15 @@ function on_click_save()
     --Verify the checkbox and set the config file
     if not cb_extraintf:get_checked() then
         vlc.config.set("extraintf", "")
+        vlc.config.set("lua-intf", "")
         cfg.status.first_run = true
         cfg.general.rate = "1"
         save_config(cfg)
         vlc.deactivate()
         return
-    else
-        --if user uncheck the box at next start the looper doesn't work
-        vlc.config.set("extraintf", "luaintf")
-        cfg.general.rate = dd_rate:get_text()
     end
+    
+    cfg.general.rate = dd_rate:get_text()
     save_config(cfg)
     dlg:hide()
 end
