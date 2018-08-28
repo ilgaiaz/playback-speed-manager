@@ -32,16 +32,12 @@ function descriptor()
     return {
         title = "Slow Sub";
         version = "3.0";
-        author = "michele";
-        --url = '';
---        shortdesc = "Time displayer.";
--- No shortdesc to use title instead of short description in VLC menu.
--- Then the first line of description will be the short description.
+        author = "Michele Gaiarin, Simone Gaiarin";
+        url = "https://github.com/ilgaiaz/slowsub/";
         description = [[
 Slow Sub
 
-This VLC extension slow down the rate video while a subs is on the screen.
-(Extension script "slowsub.lua" + Interface script "slowsub_looper_intf.lua")
+This VLC extension slows down the playback speed while a subtitle is displayed on the screen.
 ]];
         capabilities = {"menu"}
     }
