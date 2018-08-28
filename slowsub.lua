@@ -101,8 +101,8 @@ function create_dialog_enable_extension()
     close_dialog()
     dlg = vlc.dialog(descriptor().title .. " > First run")
     message = dlg:add_label("To run the extension SlowSub a VLC loop interface needs to<br>be activated the first time. Do you want to enable it now?", 1, 1, 2, 1)
-    dlg:add_button("Enable", on_click_enable, 1, 1, 1, 1)
-    dlg:add_button("Cancel", on_click_cancel, 1, 1, 1, 1)
+    dlg:add_button("Enable", on_click_enable,1,2,1,1)
+    dlg:add_button("Cancel", on_click_cancel,2,2,1,1)
 end
 
 function create_dialog_restart()
@@ -110,7 +110,7 @@ function create_dialog_restart()
     dlg_id = DIALOG_RESTART
     dlg = vlc.dialog(descriptor().title .. " > Restart required")
     message = dlg:add_label("VLC needs to be restarted to use the Slow Sub extension.", 1, 1, 5, 1)
-    dlg:add_button("Ok", on_click_cancel, 3, 2, 1, 1)
+    dlg:add_button("Ok", on_click_cancel,3,2,1,1)
 end
 
 function create_dialog_settings()
@@ -118,17 +118,17 @@ function create_dialog_settings()
     cfg = load_config()
 
     dlg = vlc.dialog(descriptor().title .. " > Settings")
-    dlg:add_label("Playback speed: ", 1, 1, 1, 1)
-    dd_rate = dlg:add_dropdown(2, 1, 1, 1)
+    dlg:add_label("Playback speed: ",1,1,1,1)
+    dd_rate = dlg:add_dropdown(2,1,2,1)
     dd_rate:add_value(tostring(cfg.general.rate)) -- Workaround to show the current value reliably (set_text is not reliable)
-    for i, 1 in ipairs(rateTable) do
+    for i,v in ipairs(rateTable) do
         dd_rate:add_value(v, i)
     end
     dd_rate:set_text(tostring(cfg.general.rate)) -- Required otherwise it is not possible to save sometimes
     log_msg("Current rate: " .. cfg.general.rate)
-    cb_extraintf = dlg:add_check_box("Loop interface enabled", true, 1, 1, 1, 1)
-    dlg:add_button("Save", on_click_save, 1, 1, 1, 1)
-    dlg:add_button("Cancel", on_click_cancel , 1, 1, 1, 1)
+    cb_extraintf = dlg:add_check_box("Loop interface enabled", true,1,3,1,1)
+    dlg:add_button("Save", on_click_save,2,4,1,1)
+    dlg:add_button("Cancel", on_click_cancel ,3,4,1,1)
 end
 
 function on_click_cancel()
