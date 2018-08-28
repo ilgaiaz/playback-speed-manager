@@ -128,11 +128,12 @@ function create_dialog()
     dlg = vlc.dialog(descriptor().title .. " > Settings")
     dlg:add_label("Playback speed: ",1,1,1,1)
     dd_rate = dlg:add_dropdown(2,1,2,1)
+    dd_rate:add_value(tostring(cfg.general.rate)) -- Workaround to show the current value reliably (set_text is not reliable)
     for i,v in ipairs(rateTable) do
         dd_rate:add_value(v, i)
     end
-    log_msg("Current rate: " .. cfg.general.rate) -- This log adds enough delay to avoid the set_text to not fail
-    dd_rate:set_text(tostring(cfg.general.rate))
+    dd_rate:set_text(tostring(cfg.general.rate)) -- Required otherwise it is not possible to save sometimes
+    log_msg("Current rate: " .. cfg.general.rate)
     cb_extraintf = dlg:add_check_box("Loop interface enabled", true,1,3,1,1)
     dlg:add_button("Save", click_SAVE_settings,2,4,1,1)
     dlg:add_button("Cancel", click_CANCEL_settings ,3,4,1,1)
