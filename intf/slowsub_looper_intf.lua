@@ -183,6 +183,7 @@ function looper()
     -- This settings are set as soon as VLC starts, before any user interaction
     cfg = load_config()
     cfg.general.rate = 1
+    cfg.status.enabled = false
     cfg.status.restarted = true
     save_config(cfg)
 
@@ -191,7 +192,9 @@ function looper()
             break
         end
         cfg = load_config()
-        if vlc.playlist.status() == "stopped" then -- no input or stopped input
+        if not cfg.status.enabled then
+            sleep(1)
+        elseif vlc.playlist.status() == "stopped" then -- no input or stopped input
             if curi then -- input stopped
                 log_msg("Playback stopped")
                 curi=nil
