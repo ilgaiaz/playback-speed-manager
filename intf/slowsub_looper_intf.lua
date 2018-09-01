@@ -179,7 +179,7 @@ end
 function looper()
     local last_index = 1
     local curi=nil -- Path to the media file currently playing
-
+    
     -- This settings are set as soon as VLC starts, before any user interaction
     cfg = load_config()
     cfg.general.rate = 1
@@ -200,7 +200,7 @@ function looper()
                 curi=nil
             end
             sleep(1)
-        else -- playing, paused
+        else-- playing, paused
             local uri=nil
             if vlc.input.item() then
                 uri=vlc.input.item():uri()
@@ -217,7 +217,7 @@ function looper()
                     sleep(5)
                 end
             else -- current input
-                if vlc.playlist.status()=="playing" then
+                if vlc.playlist.status() == "playing" then
                     --Call the function only when the video is playing
                     if subs_ready then
                         last_index = rate_adjustment(last_index)
@@ -225,12 +225,12 @@ function looper()
                             sleep(0.3)
                         end
                     else
+                        -- Keep trying loading the subtitles. This allows the extension to start 
+                        -- as soon as the name of the subtitles matches that of the video file
                         subs_ready = load_subtitles()
                         sleep(1)
                     end
-                    --log_msg("playing")
-                elseif vlc.playlist.status()=="paused" then
-                    --log_msg("paused")
+                elseif vlc.playlist.status() == "paused" then
                     sleep(0.3)
                 else -- ?
                     log_msg("unknown. Playlist status: ".. vlc.playlist.status())
