@@ -226,8 +226,7 @@ function looper()
                         end
                     else
                         subs_ready = load_subtitles()
-                        sleep(0.3)
-                        --vlc.msg.dbg("last_index value: "..last_index)
+                        sleep(1)
                     end
                     --log_msg("playing")
                 elseif vlc.playlist.status()=="paused" then
