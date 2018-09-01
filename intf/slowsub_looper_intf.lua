@@ -185,7 +185,9 @@ function looper()
         elseif vlc.playlist.status() == "stopped" then -- no input or stopped input
             curi = nil
             sleep(1)
-        else-- playing, paused
+        elseif vlc.playlist.status() == "paused" then
+            sleep(0.3)
+        else
             local uri=nil
             if vlc.input.item() then
                 uri=vlc.input.item():uri()
@@ -215,8 +217,6 @@ function looper()
                         subs_ready = load_subtitles()
                         sleep(1)
                     end
-                elseif vlc.playlist.status() == "paused" then
-                    sleep(0.3)
                 else -- ?
                     log_msg("unknown. Playlist status: ".. vlc.playlist.status())
                     sleep(1)
