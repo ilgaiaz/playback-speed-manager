@@ -91,7 +91,7 @@ function rate_adjustment(my_index)
     local input = vlc.object.input()
     local currentSpeed = vlc.var.get(input,"rate")
     local normalSpeed = 1.0
-    local updatedSpeed = set_video_speed(normalSpeed) --verify if user change the rate
+    local updatedSpeed = tonumber(cfg.general.rate)
 
     actual_time = get_elapsed_time()
     vlc.msg.dbg("Current rate: "..vlc.var.get(input,"rate"))
@@ -160,18 +160,6 @@ function get_elapsed_time()
     return elapsed_time
 end
 
-function set_video_speed(mySpeed)
-    local rateFactor = nil
-
-    rateFactor = tonumber(cfg.general.rate)
-    if rateFactor ~= nil then
-        --vlc.msg.dbg("updateRate: ".. rateFactor .. type(rateFactor))
-        return mySpeed * rateFactor
-    else
-        --This option is true when extension is off so keep the rate to 1
-        return 1
-    end
-end
 --*****************************ENDOF SLOWSPEED*********************************
 
 
