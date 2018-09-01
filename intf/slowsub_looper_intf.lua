@@ -182,47 +182,32 @@ function looper()
         cfg = load_config()
         if not cfg.status.enabled then
             sleep(1)
+        elseif vlc.playlist.status() == "playing" then
+            uri = vlc.input.item():uri()
+            if not curi or curi ~= uri then -- new input (first input or changed input)
+                curi = uri
+                subs_ready = false
+            end
+            if subs_ready then
+                last_index = rate_adjustment(last_index)
+                if last_index == nil then
+                    sleep(0.3)
+                end
+            else
+                -- Keep trying loading the subtitles. This allows the extension to start 
+                -- as soon as the name of the subtitles matches that of the video file
+                subs_ready = load_subtitles()
+                sleep(1)
+            end
+            sleep(0.1)
         elseif vlc.playlist.status() == "stopped" then -- no input or stopped input
             curi = nil
             sleep(1)
         elseif vlc.playlist.status() == "paused" then
             sleep(0.3)
-        else
-            local uri=nil
-            if vlc.input.item() then
-                uri=vlc.input.item():uri()
-            end
-            if not uri then
-                log_msg("Playlist status: " .. vlc.playlist.status())
-                sleep(0.1)
-            elseif not curi or curi~=uri then -- new input (first input or changed input)
-                curi=uri
-                subs_ready = load_subtitles() -- Try to load the subtitles for the new video
-                if not subs_ready then
-                    sleep(1) -- Required to give enough time to the OSD to find the video stream
-                    vlc.osd.message("SlowSub error: An *.srt subtitles with the same name of the media file has not been found.", nil, "top", 5000000)
-                    sleep(5)
-                end
-            else -- current input
-                if vlc.playlist.status() == "playing" then
-                    --Call the function only when the video is playing
-                    if subs_ready then
-                        last_index = rate_adjustment(last_index)
-                        if last_index == nil then
-                            sleep(0.3)
-                        end
-                    else
-                        -- Keep trying loading the subtitles. This allows the extension to start 
-                        -- as soon as the name of the subtitles matches that of the video file
-                        subs_ready = load_subtitles()
-                        sleep(1)
-                    end
-                else -- ?
-                    log_msg("unknown. Playlist status: ".. vlc.playlist.status())
-                    sleep(1)
-                end
-                sleep(0.1)
-            end
+        else -- ?
+            log_msg("unknown. Playlist status: ".. vlc.playlist.status())
+            sleep(1)
         end
     end
 end
