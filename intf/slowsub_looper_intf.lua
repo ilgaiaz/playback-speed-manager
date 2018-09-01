@@ -166,7 +166,7 @@ end
 --*********************************LOOPER**************************************
 function looper()
     local last_index = 1
-    local curi=nil -- Path to the media file currently playing
+    local curi = nil -- Path to the media file currently playing
     
     -- This settings are set as soon as VLC starts, before any user interaction
     cfg = load_config()
@@ -183,10 +183,7 @@ function looper()
         if not cfg.status.enabled then
             sleep(1)
         elseif vlc.playlist.status() == "stopped" then -- no input or stopped input
-            if curi then -- input stopped
-                log_msg("Playback stopped")
-                curi=nil
-            end
+            curi = nil
             sleep(1)
         else-- playing, paused
             local uri=nil
