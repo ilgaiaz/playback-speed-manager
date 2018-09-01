@@ -22,197 +22,218 @@ INSTALLATION directory:
 * Mac OS X (current user): /Users/%your_name%/Library/Application Support/org.videolan.vlc/lua/extensions/
 --]]----------------------------------------
 
-config={}
-local cfg={}
-rateTable = {"0.9", "0.85", "0.80", "0.75", "0.70", "0.65", "0.60", "0.55", "0.50"}
-DEFAULTRATE = "0.70"
---Check subs variables
-FILENAME_EXTENSION = "srt" -- "eng.srt", "srt-vlc", ...
-html1 = "<div align=\"center\" style=\"background-color:white;\"><a style=\"font-family:Verdana;font-size:36px;font-weight:bold;color:black;background-color:white;\">"
-html2 = "</a></div>"
+rateTable = {"1", "0.9", "0.85", "0.80", "0.75", "0.70", "0.65", "0.60", "0.55", "0.50"}
 
+DIALOG_ENABLE = 1
+DIALOG_RESTART = 2
+DIALOG_SETTINGS = 3
 
+---------------- Standard VLC extension functions that must/can be implemented ---------------------
 function descriptor()
     return {
         title = "Slow Sub";
         version = "3.0";
-        author = "michele";
-        --url = '';
---        shortdesc = "Time displayer.";
--- No shortdesc to use title instead of short description in VLC menu.
--- Then the first line of description will be the short description.
+        author = "Michele Gaiarin, Simone Gaiarin";
+        url = "https://github.com/ilgaiaz/slowsub/";
         description = [[
 Slow Sub
 
-This VLC extension slow down the rate video while a subs is on the screen.
-(Extension script "slowsub.lua" + Interface script "slowsub_looper_intf.lua")
+This VLC extension slows down the playback speed while a subtitle is displayed on the screen.
 ]];
         capabilities = {"menu"}
     }
 end
 
 function activate()
-    get_config()
-    if config and config.SLOWSUB then 
-        cfg = config.SLOWSUB 
+    cfg = load_config()
+    if not cfg.status.restarted then
+        create_dialog_restart()
+        return
     end
-    if cfg.first_run==nil or cfg.first_run==true then
-        create_dialog_S()
+    if cfg.status.first_run then
+        create_dialog_enable_extension()
+        return
     end
-    if vlc.input.item() and check_subtitles() then
-        cfg.rate = "1"
-        set_config(cfg, "SLOWSUB")
-        create_dialog()
-    else
-        create_dialog_error()
-    end
+    create_dialog_settings()
 end
 
 function deactivate()
-    cfg.rate = "1"
-    set_config(cfg, "SLOWSUB")
+    cfg.general.rate = "1"
+    save_config(cfg)
 end
 
+--- Called when a dialog is closed with the X button
 function close()
+    if dlg_id == DIALOG_ENABLE or dlg_id == DIALOG_RESTART then
+        vlc.deactivate()
+    end
 end
 
 function menu()
-    return {"Control panel"}
+    return {"Settings"}
 end
 
 function trigger_menu(id)
-    if id == 1 then 
-        create_dialog()
+    close_dialog()
+    if id == 1 then
+        create_dialog_settings()
     end
 end
 
 function meta_changed()
 end
------------------------------------------
---(x,x,x,x) = column, line, how many colums unify,  how many line unify??
-function create_dialog_S()
-    dlg = vlc.dialog(descriptor().title .. " > SETTINGS")
-    message = dlg:add_label(html1..descriptor().title..html2.."To run the extension SlowSub a VLC loop interface<br>needs to be activated the first time</br>.<br>Do you want to enable it now?</br>", 1, 1, 2, 1)
-    dlg:add_button("ENABLE", click_ENABLE,1,2,1,1)
-    dlg:add_button("CANCEL", click_CANCEL_settings,2,2,1,1)
-    lb_message_dialog_s = dlg:add_label("",1,3,2,1)
+
+---------------------------- Functions specific to this extension ----------------------------------
+
+function log_msg(lm)
+    vlc.msg.info("[Slowsub config interface] " .. lm)
 end
 
-function click_ENABLE()
+function close_dialog()
+    if dlg then
+        dlg:delete()
+        dlg = nil
+    end
+end
+
+function create_dialog_enable_extension()
+    dlg_id = DIALOG_ENABLE
+    close_dialog()
+    dlg = vlc.dialog(descriptor().title .. " > First run")
+    message = dlg:add_label("To run the extension SlowSub a VLC loop interface needs to<br>be activated the first time. Do you want to enable it now?", 1, 1, 2, 1)
+    dlg:add_button("Enable", on_click_enable, 1, 2, 1, 1)
+    dlg:add_button("Cancel", on_click_cancel, 2, 2, 1, 1)
+end
+
+function create_dialog_restart()
+    close_dialog()
+    dlg_id = DIALOG_RESTART
+    dlg = vlc.dialog(descriptor().title .. " > Restart required")
+    message = dlg:add_label("VLC needs to be restarted to use the Slow Sub extension.", 1, 1, 5, 1)
+    dlg:add_button("Ok", on_click_cancel, 3, 2, 1, 1)
+end
+
+function create_dialog_settings()
+    dlg_id = DIALOG_SETTINGS
+    cfg = load_config()
+
+    dlg = vlc.dialog(descriptor().title .. " > Settings")
+    dlg:add_label("Playback speed: ", 1, 1, 1, 1)
+    dd_rate = dlg:add_dropdown(2, 1, 2, 1)
+    dd_rate:add_value(tostring(cfg.general.rate)) -- Workaround to show the current value reliably (set_text is not reliable)
+    for i, v in ipairs(rateTable) do
+        dd_rate:add_value(v, i)
+    end
+    dd_rate:set_text(tostring(cfg.general.rate)) -- Required otherwise it is not possible to save sometimes
+    log_msg("Current rate: " .. cfg.general.rate)
+    cb_extraintf = dlg:add_check_box("Loop interface enabled", true, 1, 3, 1, 1)
+    dlg:add_button("Save", on_click_save, 2, 4, 1, 1)
+    dlg:add_button("Cancel", on_click_cancel , 3, 4, 1, 1)
+end
+
+function on_click_cancel()
+    dlg:hide()
+    if dlg_id == DIALOG_ENABLE or dlg_id == DIALOG_RESTART then
+        vlc.deactivate()
+    end
+end
+
+function on_click_enable()
     vlc.config.set("extraintf", "luaintf")
     vlc.config.set("lua-intf", "slowsub_looper_intf")
-    cfg.first_run = false
-    set_config(cfg, "SLOWSUB")
-    lb_message_dialog_s:set_text("Please restart VLC for changes to take effect!")
+    cfg.status.first_run = false
+    cfg.status.restarted = false
+    save_config(cfg)
+    dlg:hide()
+    vlc.deactivate()
 end
 
-function create_dialog()
-    dlg = vlc.dialog(descriptor().title .. " > Speed Rate")
-    dlg:add_label("Slow speed: ",1,1,1,1)
-    dd_rate = dlg:add_dropdown(2,1,1,1)
-        for i,v in ipairs(rateTable) do
-            dd_rate:add_value(v, i)
-        end
-    dd_rate:set_text(DEFAULTRATE)
-    cb_extraintf = dlg:add_check_box("Interface enabled", true,1,2,1,1)
-    dlg:add_button("SAVE", click_SAVE_settings,1,3,1,1)
-    dlg:add_button("CANCEL", click_CANCEL_settings ,2,3,1,1)
-    lb_message_dialog = dlg:add_label("Uncheck and save for disable VLC loop interface",1,4,2,1)
-end
-
-function click_SAVE_settings()
+function on_click_save()
     --Verify the checkbox and set the config file
-    if not cb_extraintf:get_checked() then 
+    if not cb_extraintf:get_checked() then
         vlc.config.set("extraintf", "")
-        cfg.first_run = true
-        cfg.rate = "1"
-        set_config(cfg, "SLOWSUB")
-        lb_message_dialog:set_text("Please restart VLC for changes to take effect!")
+        cfg.status.first_run = true
+        cfg.general.rate = "1"
+        save_config(cfg)
+        vlc.deactivate()
+        return
     else
         --if user uncheck the box at next start the looper doesn't work
         vlc.config.set("extraintf", "luaintf")
-        cfg.rate = dd_rate:get_text()
-        set_config(cfg, "SLOWSUB")
-        lb_message_dialog:set_text("Uncheck and save for disable VLC loop interface")
+        cfg.general.rate = dd_rate:get_text()
     end
-    dlg:delete()
-end    
-
-function click_CANCEL_settings()
-    dlg:delete()
+    save_config(cfg)
+    dlg:hide()
 end
 
-function click_close()
-    dlg:delete()
-end
+---------------------------- Config management functions -------------------------------------------
 
------------------------------------------
-
------------------------------------------
-    
------------------CHECK SUBS--------------  
-
-function create_dialog_error()
-    dlg = vlc.dialog(descriptor().title .. " > ERROR")
-    w1 = dlg:add_label(html1..descriptor().title..html2.."-Play a media before opening this extension<br>-Check if the file .srt has the same name of the movie and is in the same folder<br>", 1, 1, 1, 1)
-    dd_close = dlg:add_button("Close", click_close,1,4,1,1)
-end
-
-function check_subtitles()
-    subtitles_uri=media_path(FILENAME_EXTENSION) 
--- read file
-    local s = vlc.stream(subtitles_uri)
-    if s==nil then 
-        return false 
+--- Returns a table containing all the data from the INI file.
+--@param fileName The name of the INI file to parse. [string]
+--@return The table containing all data from the INI file. [table]
+function load_config()
+    fileName = vlc.config.configdir() .. "slowsubrc"
+    assert(type(fileName) == 'string', 'Parameter "fileName" must be a string.');
+    local file = io.open(fileName, 'r')
+    if not file then
+        --, 'Error loading file :' .. fileName);
+        data = default_config();
+        save_config(data)
+        return data
     end
-    return true
-end
-
-    
-function media_path(extension)
-    local media_uri = vlc.input.item():uri()
-    media_uri = string.gsub(media_uri, "^(.*)%..-$","%1") .. "." .. extension
-    vlc.msg.info(media_uri)
-    return media_uri
-end
-
------------------------------------------
-        
-function get_config()
-    local s = vlc.config.get("bookmark10")
-    if not s or not string.match(s, "^config={.*}$") then 
-        s = "config={}" 
-    end
-    --Assert : check if there is an error from function
-    --Loadstring  : loadstring load a Lua chunk from a string and it only compiles the chunk and returns the compiled chunk as a function
-    assert(loadstring(s))() -- loads the vlcrc string in "bookmark10" (like a refresh after modified) ??
-end
-
-function set_config(cfg_table, cfg_title)
-    if not cfg_table then 
-        cfg_table={} 
-    end
-    if not cfg_title then 
-        cfg_title= "SLOWSUB" 
-    end
-    get_config()
-    config[cfg_title]=cfg_table
-    vlc.config.set("bookmark10", "config="..serialize(config))
-end
-
-function serialize(t)
-    if type(t)=="table" then
-        local s='{'
-        for k,v in pairs(t) do
-            if type(k)~='number' then 
-                k='"'..k..'"' 
-            end
-            s = s..'['..k..']='..serialize(v)..',' -- recursion
+    local data = {};
+    local section;
+    for line in file:lines() do
+        local tempSection = line:match('^%[([^%[%]]+)%]$');
+        if(tempSection)then
+            section = tonumber(tempSection) and tonumber(tempSection) or tempSection;
+            data[section] = data[section] or {};
         end
-        return s..'}'
-    elseif type(t)=="string" then
-        return string.format("%q", t)
-    else --if type(t)=="boolean" or type(t)=="number" then
-        return tostring(t)
+        local param, value = line:match('^([%w|_]+)%s-=%s-(.+)$');
+        if(param and value ~= nil)then
+            if(tonumber(value))then
+                value = tonumber(value);
+            elseif(value == 'true')then
+                value = true;
+            elseif(value == 'false')then
+                value = false;
+            end
+            if(tonumber(param))then
+                param = tonumber(param);
+            end
+            data[section][param] = value;
+        end
     end
+    file:close();
+    return data;
+end
+
+--- Saves all the data from a table to an INI file.
+--@param fileName The name of the INI file to fill. [string]
+--@param data The table containing all the data to store. [table]
+function save_config(data)
+    fileName = vlc.config.configdir() .. "slowsubrc"
+    assert(type(fileName) == 'string', 'Parameter "fileName" must be a string.');
+    assert(type(data) == 'table', 'Parameter "data" must be a table.');
+    local file = assert(io.open(fileName, 'w+b'), 'Error loading file :' .. fileName);
+    local contents = '';
+    for section, param in pairs(data) do
+        contents = contents .. ('[%s]\n'):format(section);
+        for key, value in pairs(param) do
+            contents = contents .. ('%s=%s\n'):format(key, tostring(value));
+        end
+        contents = contents .. '\n';
+    end
+    file:write(contents);
+    file:close();
+end
+
+function default_config()
+    local data = {}
+    data.general = {}
+    data.general.rate = 1
+    data.status = {}
+    data.status.first_run = true
+    data.status.restarted = true
+    return data
 end
