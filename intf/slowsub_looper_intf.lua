@@ -178,8 +178,9 @@ end
 --*********************************LOOPER**************************************
 function looper()
     local last_index = 1
-    local curi=nil
+    local curi=nil -- Path to the media file currently playing
 
+    -- This settings are set as soon as VLC starts, before any user interaction
     cfg = load_config()
     cfg.general.rate = 1
     cfg.status.restarted = true
@@ -190,9 +191,9 @@ function looper()
             break
         end
         cfg = load_config()
-        if vlc.playlist.status()=="stopped" then -- no input or stopped input
+        if vlc.playlist.status() == "stopped" then -- no input or stopped input
             if curi then -- input stopped
-                log_msg("stopped")
+                log_msg("Playback stopped")
                 curi=nil
             end
             sleep(1)
@@ -236,7 +237,7 @@ function looper()
 end
 
 function log_msg(lm)
-    vlc.msg.info("[Slowsub looper_intf] " .. lm)
+    vlc.msg.info(lm)
 end
 
 function sleep(st) -- seconds
