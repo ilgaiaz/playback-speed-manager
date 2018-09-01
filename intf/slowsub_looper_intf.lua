@@ -207,8 +207,12 @@ function looper()
                 sleep(0.1)
             elseif not curi or curi~=uri then -- new input (first input or changed input)
                 curi=uri
-                subs_ready = load_subtitles() --Update subtitles for the new video
-                log_msg(curi)
+                subs_ready = load_subtitles() -- Try to load the subtitles for the new video
+                if not subs_ready then
+                    sleep(1) -- Required to give enough time to the OSD to find the video stream
+                    vlc.osd.message("SlowSub error: An *.srt subtitles with the same name of the media file has not been found.", nil, "top", 5000000)
+                    sleep(5)
+                end
             else -- current input
                 if vlc.playlist.status()=="playing" then
                     --Call the function only when the video is playing
