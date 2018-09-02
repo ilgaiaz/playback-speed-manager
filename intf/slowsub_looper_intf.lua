@@ -67,7 +67,7 @@ end
 
 function format_time(h,m,s,ms) -- time to seconds
     --ToDO : add millisecond + tonumber(ms)
-    return tonumber(h)*3600+tonumber(m)*60+tonumber(s)
+    return tonumber(h)*3600 + tonumber(m)*60 + tonumber(s)
 end
 
 function subtitle_path()
