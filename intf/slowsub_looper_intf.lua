@@ -23,13 +23,12 @@ INSTALLATION directory:
 --]]----------------------------------------
 
 
---config.TIME={} -- subtable reserved for TIME extension
- -- subtable reserved for slowsub extension
---Load subs variables
+-- Constants
 UTF8BOM = string.char(0xEF, 0xBB, 0xBF)
---Speed video variables
 MAXTIMEDIFFERENCE = 3 --Time in seconds
 
+-- Global variables
+subtitles = {}
 
 --**********************LOAD SUBS****************************
 function load_subtitles()
@@ -48,7 +47,7 @@ function load_subtitles()
         data = vlc.strings.from_charset("Windows-1250", data)
     end
     -- parse datavlc.object.
-    subtitles={}
+    subtitles = {}
     srt_pattern = "(%d%d):(%d%d):(%d%d),(%d%d%d) %-%-> (%d%d):(%d%d):(%d%d),(%d%d%d).-\n(.-)\n\n"
     --Find string match for find time value in the srt file
     for h1, m1, s1, ms1, h2, m2, s2, ms2, text in string.gmatch(data, srt_pattern) do
@@ -57,7 +56,7 @@ function load_subtitles()
             text ="  "
         end
         --Add value start/stop time and text in the table subtitles
-        table.insert(subtitles,{format_time(h1, m1, s1, ms1), format_time(h2, m2, s2, ms2), text})
+        table.insert(subtitles, {format_time(h1, m1, s1, ms1), format_time(h2, m2, s2, ms2), text})
     end
     if #subtitles ~= 0 then
         return true
