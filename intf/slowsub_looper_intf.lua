@@ -27,14 +27,13 @@ INSTALLATION directory:
  -- subtable reserved for slowsub extension
 --Load subs variables
 CHARSET = "Windows-1250" -- nil or "ISO-8859-2", Windows-1250...
-FILENAME_EXTENSION = "srt" -- "eng.srt", "srt-vlc", ...
 --Speed video variables
 MAXTIMEDIFFERENCE = 3 --Time in seconds
 
 
 --**********************LOAD SUBS****************************
 function load_subtitles()
-    local subtitles_uri = media_path(FILENAME_EXTENSION)
+    local subtitles_uri = subtitle_path()
     -- read file subtitles_uri
     local s = vlc.stream(subtitles_uri)
     if s==nil then
@@ -75,10 +74,9 @@ function format_time(h,m,s,ms) -- time to seconds
     return tonumber(h)*3600+tonumber(m)*60+tonumber(s)
 end
 
-function media_path(extension)
+function subtitle_path()
     local media_uri = vlc.input.item():uri()
-    media_uri = string.gsub(media_uri, "^(.*)%..-$","%1") .. "." .. extension
-    vlc.msg.info(media_uri)
+    media_uri = string.gsub(media_uri, "^(.*)%..-$","%1") .. ".srt"
     return media_uri
 end
 
