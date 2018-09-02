@@ -36,7 +36,7 @@ function load_subtitles()
     local subtitles_uri = subtitle_path()
     -- read file subtitles_uri
     local s = vlc.stream(subtitles_uri)
-    if s==nil then
+    if s == nil then
         return false
     end
     --Read max 500000 chars -> enough
@@ -44,8 +44,8 @@ function load_subtitles()
     --replace the "\r" char with an empty char
     data = string.gsub( data, "\r", "")
     -- UTF-8 BOM detection
-    if string.char(0xEF,0xBB,0xBF)==string.sub(data,1,3) then
-        CHARSET=nil
+    if string.char(0xEF, 0xBB, 0xBF) == string.sub(data, 1, 3) then
+        CHARSET = nil
     end
     -- parse datavlc.object.
     subtitles={}
@@ -53,16 +53,16 @@ function load_subtitles()
     --Find string match for find time value in the srt file
     for h1, m1, s1, ms1, h2, m2, s2, ms2, text in string.gmatch(data, srt_pattern) do
         --If the text is empty then add a space
-        if text=="" then
-            text=" "
+        if text == "" then
+            text ="  "
         end
-        if CHARSET~=nil then
+        if CHARSET ~= nil then
             text=vlc.strings.from_charset(CHARSET, text)
         end
         --Add value start/stop time and text in the table subtitles
         table.insert(subtitles,{format_time(h1, m1, s1, ms1), format_time(h2, m2, s2, ms2), text})
     end
-    if #subtitles~=0 then
+    if #subtitles ~= 0 then
         return true
     else
         return false
