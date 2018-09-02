@@ -26,6 +26,7 @@ INSTALLATION directory:
 -- Constants
 UTF8BOM = string.char(0xEF, 0xBB, 0xBF)
 MAXTIMEDIFFERENCE = 3 --Time in seconds
+NORMALRATE = 1.0
 
 -- Global variables
 subtitles = {}
@@ -84,25 +85,24 @@ function rate_adjustment(my_index)
     local i = 1
     local input = vlc.object.input()
     local currentSpeed = vlc.var.get(input,"rate")
-    local normalSpeed = 1.0
     local updatedSpeed = tonumber(cfg.general.rate)
 
     actual_time = get_elapsed_time()
     vlc.msg.dbg("Current rate: "..vlc.var.get(input,"rate"))
     if my_index == nil then
-        if currentSpeed ~= normalSpeed then
-            vlc.var.set(input, "rate", normalSpeed)
+        if currentSpeed ~= NORMALRATE then
+            vlc.var.set(input, "rate", NORMALRATE)
         end
         return nil  --Avoid some rare case of error when user change the elapsed time
     elseif  subtitles[my_index + 1] == nil then
-        if currentSpeed ~= normalSpeed then
-            vlc.var.set(input, "rate", normalSpeed)
+        if currentSpeed ~= NORMALRATE then
+            vlc.var.set(input, "rate", NORMALRATE)
         end
         return nil  --check for the last subs and avoid error with the table subtitles
     elseif actual_time < subtitles[1][1] then --avoid loop while waiting the first sub
         --vlc.msg.dbg("FIRST SUB")
-        if currentSpeed ~= normalSpeed then
-            vlc.var.set(input, "rate", normalSpeed)
+        if currentSpeed ~= NORMALRATE then
+            vlc.var.set(input, "rate", NORMALRATE)
         end
         return 1
     elseif actual_time >= subtitles[my_index][1] and actual_time<=subtitles[my_index][2] then
@@ -115,8 +115,8 @@ function rate_adjustment(my_index)
         --vlc.msg.dbg("BETWEEN 2 SUB")
         if (subtitles[my_index + 1][1] - subtitles[my_index][2]) < MAXTIMEDIFFERENCE then
             return my_index --don't change the rate if two subs are near
-        elseif currentSpeed ~= normalSpeed then
-            vlc.var.set(input, "rate", normalSpeed)
+        elseif currentSpeed ~= NORMALRATE then
+            vlc.var.set(input, "rate", NORMALRATE)
         end
         return my_index --if we are in the middle from two consecutive subs return and avoid the while
     elseif actual_time >= subtitles[my_index + 1][1] and actual_time<=subtitles[my_index + 1][2] then
@@ -139,8 +139,8 @@ function rate_adjustment(my_index)
         end
     end
 
-    if currentSpeed ~= normalSpeed then
-        vlc.var.set(input, "rate", normalSpeed)
+    if currentSpeed ~= NORMALRATE then
+        vlc.var.set(input, "rate", NORMALRATE)
     end
     return my_index
 end
