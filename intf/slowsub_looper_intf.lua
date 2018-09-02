@@ -124,19 +124,12 @@ function rate_adjustment(my_index)
         end
         return my_index + 1 --if we are in the next Sub update my_index
     else --if user change the elapsed time check all subs and wait for the new index
-        if not ((actual_time >= subtitles[my_index][1] and actual_time <= subtitles[my_index][2]) or actual_time <= subtitles[my_index][1]) then
-            local i = 1
-            while subtitles[i] do
-                if actual_time >= subtitles[i][1] and actual_time <= subtitles[i][2] then
-                    if currentSpeed ~= updatedSpeed then
-                        vlc.var.set(input, "rate", updatedSpeed)
-                    end
-                    return i
-                elseif actual_time <= subtitles[i][1] then
-                    return i
-                end
-                i = i + 1
+        local i = 1
+        while subtitles[i] do
+            if actual_time >= subtitles[i][1] and actual_time < subtitles[i + 1][1] then
+                return i
             end
+            i = i + 1
         end
     end
 
