@@ -26,7 +26,7 @@ INSTALLATION directory:
 --config.TIME={} -- subtable reserved for TIME extension
  -- subtable reserved for slowsub extension
 --Load subs variables
-CHARSET = "Windows-1250" -- nil or "ISO-8859-2", Windows-1250...
+UTF8BOM = string.char(0xEF, 0xBB, 0xBF)
 --Speed video variables
 MAXTIMEDIFFERENCE = 3 --Time in seconds
 
@@ -44,8 +44,8 @@ function load_subtitles()
     --replace the "\r" char with an empty char
     data = string.gsub( data, "\r", "")
     -- UTF-8 BOM detection
-    if string.char(0xEF, 0xBB, 0xBF) == string.sub(data, 1, 3) then
-        CHARSET = nil
+    if string.sub(data, 1, 3) ~= UTF8BOM then
+        data = vlc.strings.from_charset("Windows-1250", data)
     end
     -- parse datavlc.object.
     subtitles={}
@@ -55,9 +55,6 @@ function load_subtitles()
         --If the text is empty then add a space
         if text == "" then
             text ="  "
-        end
-        if CHARSET ~= nil then
-            text=vlc.strings.from_charset(CHARSET, text)
         end
         --Add value start/stop time and text in the table subtitles
         table.insert(subtitles,{format_time(h1, m1, s1, ms1), format_time(h2, m2, s2, ms2), text})
