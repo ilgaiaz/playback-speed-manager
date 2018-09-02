@@ -81,19 +81,19 @@ end
 
 
 --******************************SLOWSPEED************************************
-function rate_adjustment(my_index)
+function rate_adjustment(sub_index)
     local input = vlc.object.input()
     local currentSpeed = vlc.var.get(input,"rate")
     local updatedSpeed = tonumber(cfg.general.rate)
 
     actual_time = get_elapsed_time()
     vlc.msg.dbg("Current rate: "..vlc.var.get(input,"rate"))
-    if my_index == nil then
+    if sub_index == nil then
         if currentSpeed ~= NORMALRATE then
             vlc.var.set(input, "rate", NORMALRATE)
         end
         return nil  --Avoid some rare case of error when user change the elapsed time
-    elseif  subtitles[my_index + 1] == nil then
+    elseif  subtitles[sub_index + 1] == nil then
         if currentSpeed ~= NORMALRATE then
             vlc.var.set(input, "rate", NORMALRATE)
         end
@@ -104,25 +104,25 @@ function rate_adjustment(my_index)
             vlc.var.set(input, "rate", NORMALRATE)
         end
         return 1
-    elseif actual_time >= subtitles[my_index][1] and actual_time <= subtitles[my_index][2] then
+    elseif actual_time >= subtitles[sub_index][1] and actual_time <= subtitles[sub_index][2] then
         --vlc.msg.dbg("IN THE SUB")
         if currentSpeed ~= updatedSpeed then
             vlc.var.set(input, "rate", updatedSpeed)
         end
-        return my_index --if find the next sub return the index and avoid the while
-    elseif actual_time > subtitles[my_index][2] and actual_time < subtitles[my_index + 1][1] then
+        return sub_index --if find the next sub return the index and avoid the while
+    elseif actual_time > subtitles[sub_index][2] and actual_time < subtitles[sub_index + 1][1] then
         --vlc.msg.dbg("BETWEEN 2 SUB")
         --don't change the rate if two subs are near
-        if currentSpeed ~= NORMALRATE and (subtitles[my_index + 1][1] - subtitles[my_index][2]) >= MAXTIMEDIFFERENCE then
+        if currentSpeed ~= NORMALRATE and (subtitles[sub_index + 1][1] - subtitles[sub_index][2]) >= MAXTIMEDIFFERENCE then
             vlc.var.set(input, "rate", NORMALRATE)
         end
-        return my_index --if we are in the middle from two consecutive subs return and avoid the while
-    elseif actual_time >= subtitles[my_index + 1][1] and actual_time <= subtitles[my_index + 1][2] then
+        return sub_index --if we are in the middle from two consecutive subs return and avoid the while
+    elseif actual_time >= subtitles[sub_index + 1][1] and actual_time <= subtitles[sub_index + 1][2] then
         --vlc.msg.dbg("NEXT SUB")
         if currentSpeed ~= updatedSpeed then
             vlc.var.set(input, "rate", updatedSpeed)
         end
-        return my_index + 1 --if we are in the next Sub update my_index
+        return sub_index + 1 --if we are in the next Sub update sub_index
     else --if user change the elapsed time check all subs and wait for the new index
         local i = 1
         while subtitles[i] do
@@ -136,7 +136,7 @@ function rate_adjustment(my_index)
     if currentSpeed ~= NORMALRATE then
         vlc.var.set(input, "rate", NORMALRATE)
     end
-    return my_index
+    return sub_index
 end
 
 function get_elapsed_time()
@@ -153,7 +153,7 @@ end
 
 --*********************************LOOPER**************************************
 function looper()
-    local last_index = 1
+    local last_sub_index = 1
     local curi = nil -- Path to the media file currently playing
     
     -- This settings are set as soon as VLC starts, before any user interaction
@@ -177,8 +177,8 @@ function looper()
                 subs_ready = false
             end
             if subs_ready then
-                last_index = rate_adjustment(last_index)
-                if last_index == nil then
+                last_sub_index = rate_adjustment(last_sub_index)
+                if last_sub_index == nil then
                     sleep(0.3)
                 end
             else
