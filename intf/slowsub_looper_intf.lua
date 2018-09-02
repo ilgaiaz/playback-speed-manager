@@ -178,9 +178,6 @@ function looper()
             end
             if subs_ready then
                 last_sub_index = rate_adjustment(last_sub_index)
-                if last_sub_index == nil then
-                    sleep(0.3)
-                end
             else
                 -- Keep trying loading the subtitles. This allows the extension to start 
                 -- as soon as the name of the subtitles matches that of the video file
