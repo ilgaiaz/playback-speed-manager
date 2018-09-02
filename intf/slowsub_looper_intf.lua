@@ -82,7 +82,6 @@ end
 
 --******************************SLOWSPEED************************************
 function rate_adjustment(my_index)
-    local i = 1
     local input = vlc.object.input()
     local currentSpeed = vlc.var.get(input,"rate")
     local updatedSpeed = tonumber(cfg.general.rate)
@@ -105,7 +104,7 @@ function rate_adjustment(my_index)
             vlc.var.set(input, "rate", NORMALRATE)
         end
         return 1
-    elseif actual_time >= subtitles[my_index][1] and actual_time<=subtitles[my_index][2] then
+    elseif actual_time >= subtitles[my_index][1] and actual_time <= subtitles[my_index][2] then
         --vlc.msg.dbg("IN THE SUB")
         if currentSpeed ~= updatedSpeed then
             vlc.var.set(input, "rate", updatedSpeed)
@@ -119,19 +118,20 @@ function rate_adjustment(my_index)
             vlc.var.set(input, "rate", NORMALRATE)
         end
         return my_index --if we are in the middle from two consecutive subs return and avoid the while
-    elseif actual_time >= subtitles[my_index + 1][1] and actual_time<=subtitles[my_index + 1][2] then
+    elseif actual_time >= subtitles[my_index + 1][1] and actual_time <= subtitles[my_index + 1][2] then
         --vlc.msg.dbg("NEXT SUB")
         vlc.var.set(input, "rate", updatedSpeed)
         return my_index + 1 --if we are in the next Sub update my_index
     else --if user change the elapsed time check all subs and wait for the new index
-        if not ((actual_time>=subtitles[my_index][1] and actual_time<=subtitles[my_index][2]) or actual_time<=subtitles[my_index][1]) then
+        if not ((actual_time >= subtitles[my_index][1] and actual_time <= subtitles[my_index][2]) or actual_time <= subtitles[my_index][1]) then
+            local i = 1
             while subtitles[i] do
-                if actual_time>=subtitles[i][1] and actual_time<=subtitles[i][2] then
+                if actual_time >= subtitles[i][1] and actual_time <= subtitles[i][2] then
                     if currentSpeed ~= updatedSpeed then
                         vlc.var.set(input, "rate", updatedSpeed)
                     end
                     return i
-                elseif actual_time<=subtitles[i][1] then
+                elseif actual_time <= subtitles[i][1] then
                     return i
                 end
                 i = i + 1
