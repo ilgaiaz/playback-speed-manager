@@ -178,8 +178,9 @@ end
 --*********************************LOOPER**************************************
 function looper()
     local last_index = 1
-    local curi=nil
+    local curi=nil -- Path to the media file currently playing
 
+    -- This settings are set as soon as VLC starts, before any user interaction
     cfg = load_config()
     cfg.general.rate = 1
     cfg.status.restarted = true
@@ -190,9 +191,9 @@ function looper()
             break
         end
         cfg = load_config()
-        if vlc.playlist.status()=="stopped" then -- no input or stopped input
+        if vlc.playlist.status() == "stopped" then -- no input or stopped input
             if curi then -- input stopped
-                log_msg("stopped")
+                log_msg("Playback stopped")
                 curi=nil
             end
             sleep(1)
@@ -206,8 +207,12 @@ function looper()
                 sleep(0.1)
             elseif not curi or curi~=uri then -- new input (first input or changed input)
                 curi=uri
-                subs_ready = load_subtitles() --Update subtitles for the new video
-                log_msg(curi)
+                subs_ready = load_subtitles() -- Try to load the subtitles for the new video
+                if not subs_ready then
+                    sleep(1) -- Required to give enough time to the OSD to find the video stream
+                    vlc.osd.message("SlowSub error: An *.srt subtitles with the same name of the media file has not been found.", nil, "top", 5000000)
+                    sleep(5)
+                end
             else -- current input
                 if vlc.playlist.status()=="playing" then
                     --Call the function only when the video is playing
@@ -236,7 +241,7 @@ function looper()
 end
 
 function log_msg(lm)
-    vlc.msg.info("[Slowsub looper_intf] " .. lm)
+    vlc.msg.info(lm)
 end
 
 function sleep(st) -- seconds
