@@ -23,21 +23,19 @@ INSTALLATION directory:
 --]]----------------------------------------
 
 
---config.TIME={} -- subtable reserved for TIME extension
- -- subtable reserved for slowsub extension
---Load subs variables
-CHARSET = "Windows-1250" -- nil or "ISO-8859-2", Windows-1250...
-FILENAME_EXTENSION = "srt" -- "eng.srt", "srt-vlc", ...
---Speed video variables
+-- Constants
+UTF8BOM = string.char(0xEF, 0xBB, 0xBF)
 MAXTIMEDIFFERENCE = 3 --Time in seconds
 
+-- Global variables
+subtitles = {}
 
 --**********************LOAD SUBS****************************
 function load_subtitles()
-    local subtitles_uri = media_path(FILENAME_EXTENSION)
+    local subtitles_uri = subtitle_path()
     -- read file subtitles_uri
     local s = vlc.stream(subtitles_uri)
-    if s==nil then
+    if s == nil then
         return false
     end
     --Read max 500000 chars -> enough
@@ -45,25 +43,22 @@ function load_subtitles()
     --replace the "\r" char with an empty char
     data = string.gsub( data, "\r", "")
     -- UTF-8 BOM detection
-    if string.char(0xEF,0xBB,0xBF)==string.sub(data,1,3) then
-        CHARSET=nil
+    if string.sub(data, 1, 3) ~= UTF8BOM then
+        data = vlc.strings.from_charset("Windows-1250", data)
     end
     -- parse datavlc.object.
-    subtitles={}
+    subtitles = {}
     srt_pattern = "(%d%d):(%d%d):(%d%d),(%d%d%d) %-%-> (%d%d):(%d%d):(%d%d),(%d%d%d).-\n(.-)\n\n"
     --Find string match for find time value in the srt file
     for h1, m1, s1, ms1, h2, m2, s2, ms2, text in string.gmatch(data, srt_pattern) do
         --If the text is empty then add a space
-        if text=="" then
-            text=" "
-        end
-        if CHARSET~=nil then
-            text=vlc.strings.from_charset(CHARSET, text)
+        if text == "" then
+            text ="  "
         end
         --Add value start/stop time and text in the table subtitles
-        table.insert(subtitles,{format_time(h1, m1, s1, ms1), format_time(h2, m2, s2, ms2), text})
+        table.insert(subtitles, {format_time(h1, m1, s1, ms1), format_time(h2, m2, s2, ms2), text})
     end
-    if #subtitles~=0 then
+    if #subtitles ~= 0 then
         return true
     else
         return false
@@ -75,10 +70,9 @@ function format_time(h,m,s,ms) -- time to seconds
     return tonumber(h)*3600+tonumber(m)*60+tonumber(s)
 end
 
-function media_path(extension)
+function subtitle_path()
     local media_uri = vlc.input.item():uri()
-    media_uri = string.gsub(media_uri, "^(.*)%..-$","%1") .. "." .. extension
-    vlc.msg.info(media_uri)
+    media_uri = string.gsub(media_uri, "^(.*)%..-$","%1") .. ".srt"
     return media_uri
 end
 
