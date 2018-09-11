@@ -81,6 +81,8 @@ end
 
 
 --******************************SLOWSPEED************************************
+-- |------i------------i-----|-----i+1----------i+1-----|
+-- |-----SUB-----|+++++++++++|-----SUB-----|++++++++++++|
 function rate_adjustment(sub_index)
     local input = vlc.object.input()
     local currentSpeed = vlc.var.get(input,"rate")
@@ -88,16 +90,11 @@ function rate_adjustment(sub_index)
 
     actual_time = get_elapsed_time()
     vlc.msg.dbg("Current rate: "..vlc.var.get(input,"rate"))
-    if sub_index == nil then
+    if  subtitles[sub_index + 1] == nil then
         if currentSpeed ~= NORMALRATE then
             vlc.var.set(input, "rate", NORMALRATE)
         end
-        return nil  --Avoid some rare case of error when user change the elapsed time
-    elseif  subtitles[sub_index + 1] == nil then
-        if currentSpeed ~= NORMALRATE then
-            vlc.var.set(input, "rate", NORMALRATE)
-        end
-        return nil  --check for the last subs and avoid error with the table subtitles
+        return sub_index  --check for the last subs and avoid error with the table subtitles
     elseif actual_time < subtitles[1][1] then --avoid loop while waiting the first sub
         --vlc.msg.dbg("FIRST SUB")
         if currentSpeed ~= NORMALRATE then
