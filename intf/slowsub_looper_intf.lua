@@ -134,10 +134,6 @@ function rate_adjustment(sub_index)
             i = i + 1
         end
     end
-
-    if currentSpeed ~= NORMALRATE then
-        vlc.var.set(input, "rate", NORMALRATE)
-    end
     return sub_index
 end
 
