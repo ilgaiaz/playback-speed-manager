@@ -91,7 +91,7 @@ function rate_adjustment(my_index)
     local input = vlc.object.input()
     local currentSpeed = vlc.var.get(input,"rate")
     local normalSpeed = 1.0
-    local updatedSpeed = set_video_speed(normalSpeed) --verify if user change the rate
+    local updatedSpeed = tonumber(cfg.general.rate)
 
     actual_time = get_elapsed_time()
     vlc.msg.dbg("Current rate: "..vlc.var.get(input,"rate"))
@@ -160,29 +160,18 @@ function get_elapsed_time()
     return elapsed_time
 end
 
-function set_video_speed(mySpeed)
-    local rateFactor = nil
-
-    rateFactor = tonumber(cfg.general.rate)
-    if rateFactor ~= nil then
-        --vlc.msg.dbg("updateRate: ".. rateFactor .. type(rateFactor))
-        return mySpeed * rateFactor
-    else
-        --This option is true when extension is off so keep the rate to 1
-        return 1
-    end
-end
 --*****************************ENDOF SLOWSPEED*********************************
 
 
 --*********************************LOOPER**************************************
 function looper()
     local last_index = 1
-    local curi=nil -- Path to the media file currently playing
-
+    local curi = nil -- Path to the media file currently playing
+    
     -- This settings are set as soon as VLC starts, before any user interaction
     cfg = load_config()
     cfg.general.rate = 1
+    cfg.status.enabled = false
     cfg.status.restarted = true
     save_config(cfg)
 
@@ -191,51 +180,34 @@ function looper()
             break
         end
         cfg = load_config()
-        if vlc.playlist.status() == "stopped" then -- no input or stopped input
-            if curi then -- input stopped
-                log_msg("Playback stopped")
-                curi=nil
-            end
+        if not cfg.status.enabled then
             sleep(1)
-        else -- playing, paused
-            local uri=nil
-            if vlc.input.item() then
-                uri=vlc.input.item():uri()
+        elseif vlc.playlist.status() == "playing" then
+            uri = vlc.input.item():uri()
+            if not curi or curi ~= uri then -- new input (first input or changed input)
+                curi = uri
+                subs_ready = false
             end
-            if not uri then
-                log_msg("Playlist status: " .. vlc.playlist.status())
-                sleep(0.1)
-            elseif not curi or curi~=uri then -- new input (first input or changed input)
-                curi=uri
-                subs_ready = load_subtitles() -- Try to load the subtitles for the new video
-                if not subs_ready then
-                    sleep(1) -- Required to give enough time to the OSD to find the video stream
-                    vlc.osd.message("SlowSub error: An *.srt subtitles with the same name of the media file has not been found.", nil, "top", 5000000)
-                    sleep(5)
-                end
-            else -- current input
-                if vlc.playlist.status()=="playing" then
-                    --Call the function only when the video is playing
-                    if subs_ready then
-                        last_index = rate_adjustment(last_index)
-                        if last_index == nil then
-                            sleep(0.3)
-                        end
-                    else
-                        subs_ready = load_subtitles()
-                        sleep(0.3)
-                        --vlc.msg.dbg("last_index value: "..last_index)
-                    end
-                    --log_msg("playing")
-                elseif vlc.playlist.status()=="paused" then
-                    --log_msg("paused")
+            if subs_ready then
+                last_index = rate_adjustment(last_index)
+                if last_index == nil then
                     sleep(0.3)
-                else -- ?
-                    log_msg("unknown. Playlist status: ".. vlc.playlist.status())
-                    sleep(1)
                 end
-                sleep(0.1)
+            else
+                -- Keep trying loading the subtitles. This allows the extension to start 
+                -- as soon as the name of the subtitles matches that of the video file
+                subs_ready = load_subtitles()
+                sleep(1)
             end
+            sleep(0.1)
+        elseif vlc.playlist.status() == "stopped" then -- no input or stopped input
+            curi = nil
+            sleep(1)
+        elseif vlc.playlist.status() == "paused" then
+            sleep(0.3)
+        else -- ?
+            log_msg("unknown. Playlist status: ".. vlc.playlist.status())
+            sleep(1)
         end
     end
 end
