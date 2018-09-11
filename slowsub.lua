@@ -27,6 +27,7 @@ rateTable = {"1", "0.9", "0.85", "0.80", "0.75", "0.70", "0.65", "0.60", "0.55",
 DIALOG_ENABLE = 1
 DIALOG_RESTART = 2
 DIALOG_SETTINGS = 3
+DIALOG_ENABLE_ERROR = 4
 
 ---------------- Standard VLC extension functions that must/can be implemented ---------------------
 function descriptor()
@@ -105,6 +106,15 @@ function create_dialog_enable_extension()
     dlg:add_button("Cancel", on_click_cancel, 2, 2, 1, 1)
 end
 
+function create_dialog_enable_error(currentLuaIntf)
+    dlg_id = DIALOG_ENABLE_ERROR
+    close_dialog()
+    dlg = vlc.dialog(descriptor().title .. " > Extension enable error")
+    message = dlg:add_label("An extension is currently using the LUA interface (" .. currentLuaIntf .. ").<br>Enabling SlowSub will make the other extension stop working.<br>Do you want to enable SlowSub? ", 1, 1, 2, 1)
+    dlg:add_button("Enable", enable_extension, 1, 2, 1, 1)
+    dlg:add_button("Cancel", on_click_cancel, 2, 2, 1, 1)
+end
+
 function create_dialog_restart()
     close_dialog()
     dlg_id = DIALOG_RESTART
@@ -125,7 +135,6 @@ function create_dialog_settings()
         dd_rate:add_value(v, i)
     end
     dd_rate:set_text(tostring(cfg.general.rate)) -- Required otherwise it is not possible to save sometimes
-    log_msg("Current rate: " .. cfg.general.rate)
     cb_extraintf = dlg:add_check_box("Loop interface enabled", true, 1, 3, 1, 1)
     dlg:add_button("Save", on_click_save, 2, 4, 1, 1)
     dlg:add_button("Cancel", on_click_cancel , 3, 4, 1, 1)
@@ -133,12 +142,12 @@ end
 
 function on_click_cancel()
     dlg:hide()
-    if dlg_id == DIALOG_ENABLE or dlg_id == DIALOG_RESTART then
+    if dlg_id == DIALOG_ENABLE or dlg_id == DIALOG_ENABLE_ERROR or dlg_id == DIALOG_RESTART then
         vlc.deactivate()
     end
 end
 
-function on_click_enable()
+function enable_extension()
     vlc.config.set("extraintf", "luaintf")
     vlc.config.set("lua-intf", "slowsub_looper_intf")
     cfg.status.first_run = false
@@ -148,10 +157,18 @@ function on_click_enable()
     vlc.deactivate()
 end
 
+function on_click_enable()
+    local currentLuaIntf = vlc.config.get("lua-intf")
+    if currentLuaIntf ~= "" then --Another extension is using the LUA interface
+        create_dialog_enable_error(currentLuaIntf)
+        return
+    end
+    enable_extension()
+end
+
 function on_click_save()
     --Verify the checkbox and set the config file
     if not cb_extraintf:get_checked() then
-        vlc.config.set("extraintf", "")
         vlc.config.set("lua-intf", "")
         cfg.status.first_run = true
         cfg.general.rate = "1"
