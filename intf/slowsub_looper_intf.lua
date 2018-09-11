@@ -91,36 +91,38 @@ function rate_adjustment(sub_index)
     actual_time = get_elapsed_time()
     vlc.msg.dbg("Current rate: "..vlc.var.get(input,"rate"))
     if  subtitles[sub_index + 1] == nil then
+        --log_msg("Where are we: after the last sub")
         if currentSpeed ~= NORMALRATE then
             vlc.var.set(input, "rate", NORMALRATE)
         end
         return sub_index  --check for the last subs and avoid error with the table subtitles
     elseif actual_time < subtitles[1][1] then --avoid loop while waiting the first sub
-        --vlc.msg.dbg("FIRST SUB")
+        --log_msg("Where are we: before first subtitle")
         if currentSpeed ~= NORMALRATE then
             vlc.var.set(input, "rate", NORMALRATE)
         end
         return 1
     elseif actual_time >= subtitles[sub_index][1] and actual_time <= subtitles[sub_index][2] then
-        --vlc.msg.dbg("IN THE SUB")
+        --log_msg("Where are we: in the current sub")
         if currentSpeed ~= updatedSpeed then
             vlc.var.set(input, "rate", updatedSpeed)
         end
         return sub_index --if find the next sub return the index and avoid the while
     elseif actual_time > subtitles[sub_index][2] and actual_time < subtitles[sub_index + 1][1] then
-        --vlc.msg.dbg("BETWEEN 2 SUB")
+        --log_msg("Where are we: between two subs")
         --don't change the rate if two subs are near
         if currentSpeed ~= NORMALRATE and (subtitles[sub_index + 1][1] - subtitles[sub_index][2]) >= MAXTIMEDIFFERENCE then
             vlc.var.set(input, "rate", NORMALRATE)
         end
         return sub_index --if we are in the middle from two consecutive subs return and avoid the while
     elseif actual_time >= subtitles[sub_index + 1][1] and actual_time <= subtitles[sub_index + 1][2] then
-        --vlc.msg.dbg("NEXT SUB")
+        --log_msg("Where are we: in the next sub")
         if currentSpeed ~= updatedSpeed then
             vlc.var.set(input, "rate", updatedSpeed)
         end
         return sub_index + 1 --if we are in the next Sub update sub_index
     else --if user change the elapsed time check all subs and wait for the new index
+        --log_msg("Where are we: do not know, reindexing")
         local i = 1
         while subtitles[i] do
             if actual_time >= subtitles[i][1] and actual_time < subtitles[i + 1][1] then
