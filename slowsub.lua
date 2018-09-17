@@ -51,7 +51,7 @@ function activate()
         create_dialog_restart()
         return
     end
-    if cfg.status.first_run then
+    if vlc.config.get("lua-intf") ~= "slowsub_looper_intf" then
         create_dialog_enable_extension()
         return
     end
@@ -150,7 +150,6 @@ end
 function enable_extension()
     vlc.config.set("extraintf", "luaintf")
     vlc.config.set("lua-intf", "slowsub_looper_intf")
-    cfg.status.first_run = false
     cfg.status.restarted = false
     save_config(cfg)
     dlg:hide()
@@ -170,7 +169,6 @@ function on_click_save()
     --Verify the checkbox and set the config file
     if not cb_extraintf:get_checked() then
         vlc.config.set("lua-intf", "")
-        cfg.status.first_run = true
         cfg.general.rate = "1"
         save_config(cfg)
         vlc.deactivate()
@@ -249,7 +247,6 @@ function default_config()
     data.general = {}
     data.general.rate = 1
     data.status = {}
-    data.status.first_run = true
     data.status.restarted = true
     return data
 end

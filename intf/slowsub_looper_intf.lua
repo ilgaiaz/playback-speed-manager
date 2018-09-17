@@ -308,7 +308,6 @@ function default_config()
     data.general = {}
     data.general.rate = 1
     data.status = {}
-    data.status.first_run = true
     data.status.restarted = true
     return data
 end
