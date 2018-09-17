@@ -47,7 +47,8 @@ end
 
 function activate()
     cfg = load_config()
-    if not cfg.status.restarted then
+    -- The second check is required to manage crashes of VLC
+    if not cfg.status.restarted and vlc.config.get("lua-intf") == "slowsub_looper_intf" then
         create_dialog_restart()
         return
     end
