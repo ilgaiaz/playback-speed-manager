@@ -56,10 +56,13 @@ function activate()
         create_dialog_enable_extension()
         return
     end
+    cfg.status.enabled = true
+    save_config(cfg)
     create_dialog_settings()
 end
 
 function deactivate()
+    cfg.status.enabled = false
     cfg.general.rate = "1"
     save_config(cfg)
 end
@@ -248,6 +251,7 @@ function default_config()
     data.general = {}
     data.general.rate = 1
     data.status = {}
+    data.status.enabled = true
     data.status.restarted = true
     return data
 end
