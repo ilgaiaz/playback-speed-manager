@@ -157,6 +157,7 @@ function looper()
     
     -- This settings are set as soon as VLC starts, before any user interaction
     cfg = load_config()
+    cfg.general.speedup = 1
     cfg.general.rate = 1
     cfg.status.enabled = false
     cfg.status.restarted = true
@@ -267,6 +268,7 @@ end
 function default_config()
     local data = {}
     data.general = {}
+    data.general.speedup = 1
     data.general.rate = 1
     data.status = {}
     data.status.restarted = true
