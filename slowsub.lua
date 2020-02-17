@@ -22,6 +22,7 @@ INSTALLATION directory:
 * Mac OS X (current user): /Users/%your_name%/Library/Application Support/org.videolan.vlc/lua/extensions/
 --]]----------------------------------------
 
+speedupTable = {"1", "1.50", "2", "2.50", "3", "3.50", "4", "4.50", "5"}
 rateTable = {"1", "0.9", "0.85", "0.80", "0.75", "0.70", "0.65", "0.60", "0.55", "0.50"}
 
 DIALOG_ENABLE = 1
@@ -132,16 +133,28 @@ function create_dialog_settings()
     cfg = load_config()
 
     dlg = vlc.dialog(descriptor().title .. " > Settings")
-    dlg:add_label("Playback speed: ", 1, 1, 1, 1)
-    dd_rate = dlg:add_dropdown(2, 1, 2, 1)
+
+    -- SPEEDUP
+    dlg:add_label("Speedup: ", 1, 1, 1, 1)
+    dd_speedup = dlg:add_dropdown(2, 1, 2, 1)
+    --dd_speedup:add_value(tostring(cfg.general.rate)) -- Workaround to show the current value reliably (set_text is not reliable)
+    for i, v in ipairs(speedupTable) do
+        dd_speedup:add_value(v, i)
+    end
+    --dd_speedup:set_text(tostring(cfg.general.rate)) -- Required otherwise it is not possible to save sometimes
+
+    -- *******
+
+    dlg:add_label("Playback speed: ", 1, 3, 1, 1)
+    dd_rate = dlg:add_dropdown(2, 3, 2, 1)
     dd_rate:add_value(tostring(cfg.general.rate)) -- Workaround to show the current value reliably (set_text is not reliable)
     for i, v in ipairs(rateTable) do
         dd_rate:add_value(v, i)
     end
     dd_rate:set_text(tostring(cfg.general.rate)) -- Required otherwise it is not possible to save sometimes
-    cb_extraintf = dlg:add_check_box("Loop interface enabled", true, 1, 3, 1, 1)
-    dlg:add_button("Save", on_click_save, 2, 4, 1, 1)
-    dlg:add_button("Cancel", on_click_cancel , 3, 4, 1, 1)
+    cb_extraintf = dlg:add_check_box("Loop interface enabled", true, 1, 5, 1, 1)
+    dlg:add_button("Save", on_click_save, 2, 6, 1, 1)
+    dlg:add_button("Cancel", on_click_cancel , 3, 6, 1, 1)
 end
 
 function on_click_cancel()
