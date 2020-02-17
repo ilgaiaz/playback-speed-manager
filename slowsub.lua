@@ -64,6 +64,7 @@ end
 
 function deactivate()
     cfg.status.enabled = false
+    cfg.general.speedup = "1"
     cfg.general.rate = "1"
     save_config(cfg)
 end
@@ -137,11 +138,11 @@ function create_dialog_settings()
     -- SPEEDUP
     dlg:add_label("Speedup: ", 1, 1, 1, 1)
     dd_speedup = dlg:add_dropdown(2, 1, 2, 1)
-    --dd_speedup:add_value(tostring(cfg.general.rate)) -- Workaround to show the current value reliably (set_text is not reliable)
+    dd_speedup:add_value(tostring(cfg.general.speedup)) -- Workaround to show the current value reliably (set_text is not reliable)
     for i, v in ipairs(speedupTable) do
         dd_speedup:add_value(v, i)
     end
-    --dd_speedup:set_text(tostring(cfg.general.rate)) -- Required otherwise it is not possible to save sometimes
+    dd_speedup:set_text(tostring(cfg.general.speedup)) -- Required otherwise it is not possible to save sometimes
 
     -- *******
 
@@ -186,12 +187,14 @@ function on_click_save()
     --Verify the checkbox and set the config file
     if not cb_extraintf:get_checked() then
         vlc.config.set("lua-intf", "")
+        cfg.general.speedup = "1"
         cfg.general.rate = "1"
         save_config(cfg)
         vlc.deactivate()
         return
     end
     
+    cfg.general.speedup = dd_speedup:get_text()
     cfg.general.rate = dd_rate:get_text()
     save_config(cfg)
     dlg:hide()
@@ -262,6 +265,7 @@ end
 function default_config()
     local data = {}
     data.general = {}
+    data.general.speedup = 1
     data.general.rate = 1
     data.status = {}
     data.status.enabled = true

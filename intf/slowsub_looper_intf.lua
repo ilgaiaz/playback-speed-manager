@@ -26,7 +26,7 @@ INSTALLATION directory:
 -- Constants
 UTF8BOM = string.char(0xEF, 0xBB, 0xBF)
 MAXTIMEDIFFERENCE = 3 --Time in seconds
-NORMALRATE = 1.0
+--NORMALRATE = 1.0
 
 -- Global variables
 subtitles = {}
@@ -86,6 +86,7 @@ end
 function rate_adjustment(sub_index)
     local input = vlc.object.input()
     local currentSpeed = vlc.var.get(input,"rate")
+    local speedup = tonumber(cfg.general.speedup)
     local updatedSpeed = tonumber(cfg.general.rate)
 
     actual_time = get_elapsed_time()
@@ -93,14 +94,14 @@ function rate_adjustment(sub_index)
     if  subtitles[sub_index + 1] == nil then
         --check for the last subs and avoid error with the table subtitles
         --log_msg("Where are we: after the last sub")
-        if currentSpeed ~= NORMALRATE then
-            vlc.var.set(input, "rate", NORMALRATE)
+        if currentSpeed ~= speedup then
+            vlc.var.set(input, "rate", speedup)
         end
     elseif actual_time < subtitles[1][1] then 
         --avoid loop/reindexing while waiting the first sub
         --log_msg("Where are we: before first subtitle")
-        if currentSpeed ~= NORMALRATE then
-            vlc.var.set(input, "rate", NORMALRATE)
+        if currentSpeed ~= speedup then
+            vlc.var.set(input, "rate", speedup)
         end
         sub_index = 1
     elseif actual_time >= subtitles[sub_index][1] and actual_time <= subtitles[sub_index][2] then
@@ -113,8 +114,8 @@ function rate_adjustment(sub_index)
         --if we are in the middle from two consecutive subs return and avoid the while/reindexing
         --log_msg("Where are we: between two subs")
         --don't change the rate if two subs are near
-        if currentSpeed ~= NORMALRATE and (subtitles[sub_index + 1][1] - subtitles[sub_index][2]) >= MAXTIMEDIFFERENCE then
-            vlc.var.set(input, "rate", NORMALRATE)
+        if currentSpeed ~= speedup and (subtitles[sub_index + 1][1] - subtitles[sub_index][2]) >= MAXTIMEDIFFERENCE then
+            vlc.var.set(input, "rate", speedup)
         end
     elseif actual_time >= subtitles[sub_index + 1][1] and actual_time <= subtitles[sub_index + 1][2] then
          --if we are in the next Sub update sub_index
