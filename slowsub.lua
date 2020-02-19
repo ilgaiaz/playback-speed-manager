@@ -93,7 +93,7 @@ end
 ---------------------------- Functions specific to this extension ----------------------------------
 
 function log_msg(lm)
-    vlc.msg.info("[Slowsub config interface] " .. lm)
+    vlc.msg.info("[Playback speed manager config interface] " .. lm)
 end
 
 function close_dialog()
@@ -107,7 +107,7 @@ function create_dialog_enable_extension()
     dlg_id = DIALOG_ENABLE
     close_dialog()
     dlg = vlc.dialog(descriptor().title .. " > First run")
-    message = dlg:add_label("To run the extension SlowSub a VLC loop interface needs to<br>be activated the first time. Do you want to enable it now?", 1, 1, 2, 1)
+    message = dlg:add_label("To run the extension Playback speed manager a VLC loop interface needs to<br>be activated the first time. Do you want to enable it now?", 1, 1, 2, 1)
     dlg:add_button("Enable", on_click_enable, 1, 2, 1, 1)
     dlg:add_button("Cancel", on_click_cancel, 2, 2, 1, 1)
 end
@@ -116,7 +116,7 @@ function create_dialog_enable_error(currentLuaIntf)
     dlg_id = DIALOG_ENABLE_ERROR
     close_dialog()
     dlg = vlc.dialog(descriptor().title .. " > Extension enable error")
-    message = dlg:add_label("An extension is currently using the LUA interface (" .. currentLuaIntf .. ").<br>Enabling SlowSub will make the other extension stop working.<br>Do you want to enable SlowSub? ", 1, 1, 2, 1)
+    message = dlg:add_label("An extension is currently using the LUA interface (" .. currentLuaIntf .. ").<br>Enabling Playback speed manager will make the other extension stop working.<br>Do you want to enable PLayback speed manager? ", 1, 1, 2, 1)
     dlg:add_button("Enable", enable_extension, 1, 2, 1, 1)
     dlg:add_button("Cancel", on_click_cancel, 2, 2, 1, 1)
 end
@@ -125,7 +125,7 @@ function create_dialog_restart()
     close_dialog()
     dlg_id = DIALOG_RESTART
     dlg = vlc.dialog(descriptor().title .. " > Restart required")
-    message = dlg:add_label("VLC needs to be restarted to use the Slow Sub extension.", 1, 1, 5, 1)
+    message = dlg:add_label("VLC needs to be restarted to use the Playback speed manager extension.", 1, 1, 5, 1)
     dlg:add_button("Ok", on_click_cancel, 3, 2, 1, 1)
 end
 
