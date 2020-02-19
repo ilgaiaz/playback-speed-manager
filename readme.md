@@ -13,44 +13,44 @@ The developed code was obtained starting from the work of the user "mederi" whic
 # Installation
 Put the file `playback_speed_manager.lua` in :  
 
-**Windows (all users)**
+- **Windows (all users)**
 %ProgramFiles%\VideoLAN\VLC\lua\extensions\
 
-**Windows (current user)**
+- **Windows (current user)**
 %APPDATA%\VLC\lua\extensions\
 
-**Linux (all users)**
+- **Linux (all users)**
 /usr/lib/vlc/lua/extensions/
 
-**Linux (current user)**
+- **Linux (current user)**
 ~/.local/share/vlc/lua/extensions/
 
-**Mac OS X (all users)**
+- **Mac OS X (all users)**
 /Applications/VLC.app/Contents/MacOS/share/lua/extensions/
 
-**Mac OS X (current user)**
+- **Mac OS X (current user)**
 /Users/%your_name%/Library/ApplicationSupport/org.videolan.vlc/lua/extensions/
 
 
 
 Put `psm_looper_intf.lua` in :  
 
-**Windows (all users)**
+- **Windows (all users)**
 %ProgramFiles%\VideoLAN\VLC\lua\intf\
 
-**Windows (current user)**
+- **Windows (current user)**
 %APPDATA%\VLC\lua\intf\
 
-**Linux (all users)**
+- **Linux (all users)**
 /usr/lib/vlc/lua/intf/
 
-**Linux (current user)**
+- **Linux (current user)**
 ~/.local/share/vlc/lua/intf/
 
-**Mac OS X (all users)**
+- **Mac OS X (all users)**
 /Applications/VLC.app/Contents/MacOS/share/lua/intf/
 
-**Mac OS X (current user)**
+- **Mac OS X (current user)**
 /Users/%your_name%/Library/ApplicationSupport/org.videolan.vlc/lua/intf/
 
 At the end, restart VLC.
@@ -63,10 +63,10 @@ Open the desired video, go to "view" and select the "slowsub" extension.
 
 In the interface it will be possible to select two values ​​from dropdown menus:
 
-**Playback speed (no subtitles)**
+- **Playback speed (no subtitles)**
 Allows you to select the playback speed when there are no dialogues (no subtitles).
 
-**Playback speed (subtitles)**
+- **Playback speed (subtitles)**
 Allows you to select the playback speed when subtitle are displayed.
 
 ## First use
