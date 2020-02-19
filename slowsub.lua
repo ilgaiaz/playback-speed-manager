@@ -33,10 +33,10 @@ DIALOG_ENABLE_ERROR = 4
 ---------------- Standard VLC extension functions that must/can be implemented ---------------------
 function descriptor()
     return {
-        title = "Slow Sub";
+        title = "Playback speed manager";
         version = "3.0";
         author = "Michele Gaiarin, Simone Gaiarin";
-        url = "https://github.com/ilgaiaz/slowsub/";
+        url = "https://github.com/ilgaiaz/playback-speed-manager";
         description = [[
 Slow Sub
 
