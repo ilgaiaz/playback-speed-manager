@@ -11,7 +11,7 @@ So now this VLC's Addons give the possibility to :
 The developed code was obtained starting from the work of the user "mederi" which can be found [here](https://addons.videolan.org/p/1154032/).
 
 # Installation
-Put the file `slowsub.lua` in :  
+Put the file `playback_speed_manager.lua` in :  
 
 **Windows (all users)**
 %ProgramFiles%\VideoLAN\VLC\lua\extensions\
@@ -33,7 +33,7 @@ Put the file `slowsub.lua` in :
 
 
 
-Put `slowsub_looper_intf.lua` in :  
+Put `psm_looper_intf.lua` in :  
 
 **Windows (all users)**
 %ProgramFiles%\VideoLAN\VLC\lua\intf\
@@ -72,10 +72,10 @@ Allows you to select the playback speed when subtitle are displayed.
 ## First use
 On first use, the extension will ask to enable the "Loop interface". 
 All you have to do is give permission and restart VLC (the procedure is guided). From the following times, this phase will no longer be necessary.  
-This procedure is required to enable the script `slowsub_looper_intf.lua`. From this moment the script will be activated in the background at every VLC execution.
+This procedure is required to enable the script `psm_looper_intf.lua`. From this moment the script will be activated in the background at every VLC execution.
 
 ## Disable
-Every time VLC or the extension is closed the parameters are set to the standard value. If you want to completely disable the extension (in particular the script `slowsub_looper_intf.lua`), you must uncheck the "Loop interface" checkbox, confirm and restart VLC.  
+Every time VLC or the extension is closed the parameters are set to the standard value. If you want to completely disable the extension (in particular the script `psm_looper_intf.lua`), you must uncheck the "Loop interface" checkbox, confirm and restart VLC.  
 To re-enable the extension it is necessary to follow what is explained in the section "First use".
 
 # Interface
