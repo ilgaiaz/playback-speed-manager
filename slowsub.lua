@@ -38,9 +38,9 @@ function descriptor()
         author = "Michele Gaiarin, Simone Gaiarin";
         url = "https://github.com/ilgaiaz/playback-speed-manager";
         description = [[
-Slow Sub
+Playback speed manager
 
-This VLC extension slows down the playback speed while a subtitle is displayed on the screen.
+This extension allows you to increase the playback speed when there are no subtitles and to reduce it when the subtitles appear.
 ]];
         capabilities = {"menu"}
     }
