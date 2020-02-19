@@ -1,15 +1,15 @@
 --[[----- Slow sub ------------------------
-"slowsub_looper_intf.lua" - Put this VLC Interface Lua script file in \lua\intf\ folder
+"psm_looper_intf.lua" - Put this VLC Interface Lua script file in \lua\intf\ folder
 --------------------------------------------
 Requires "slowsub.lua" > Put the VLC Extension Lua script file in \lua\extensions\ folder
 
 * The Interface script can be activated from the CLI (batch script or desktop shortcut icon):
-vlc.exe --extraintf=luaintf --lua-intf=slowsub_looper_intf
+vlc.exe --extraintf=luaintf --lua-intf=psm_looper_intf
 * Otherwise the Extension script (First run: "Time > SETTINGS" dialog_msg box) will help you to set appropriate VLC preferences for automatic activation of the Interface script or you can do it manually:
 VLC Preferences:
 Tools > Preferences > Show settings=All > Interface >
 > Main interfaces: Extra interface modules [luaintf]
-> Main interfaces > Lua: Lua interface [slowsub_looper_intf]
+> Main interfaces > Lua: Lua interface [psm_looper_intf]
 Then use the Extension ("Slowsub" dialog_msg box) to control the active Interface script.
 The installed Extension is available in VLC menu "View" or "Vlc > Extensions" on Mac OS X.
 
