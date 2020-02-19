@@ -1,15 +1,15 @@
 --[[----------------------------------------
-"slowsub.lua" > Put this VLC Extension Lua script file in \lua\extensions\ folder
+"playback_speed_manager.lua" > Put this VLC Extension Lua script file in \lua\extensions\ folder
 --------------------------------------------
-Requires "slowsub_looper_intf.lua" > Put the VLC Interface Lua script file in \lua\intf\ folder
+Requires "psm_looper_intf.lua" > Put the VLC Interface Lua script file in \lua\intf\ folder
 
 * The Interface script can be activated from the CLI (batch script or desktop shortcut icon):
-vlc.exe --extraintf=luaintf --lua-intf=slowsub_looper_intf
+vlc.exe --extraintf=luaintf --lua-intf=psm_looper_intf
 * Otherwise the Extension script (First run: "Slow sub > SETTINGS" dialog box) will help you to set appropriate VLC preferences for automatic activation of the Interface script or you can do it manually:
 VLC Preferences:
 Tools > Preferences > Show settings=All > Interface >
 > Main interfaces: Extra interface modules [luaintf]
-> Main interfaces > Lua: Lua interface [slowsub_looper_intf]
+> Main interfaces > Lua: Lua interface [psm_looper_intf]
 Then use the Extension ("Slow sub" dialog box) to control the active Interface script.
 The installed Extension is available in VLC menu "View" or "Vlc > Extensions" on Mac OS X.
 
@@ -49,11 +49,11 @@ end
 function activate()
     cfg = load_config()
     -- The second check is required to manage crashes of VLC
-    if not cfg.status.restarted and vlc.config.get("lua-intf") == "slowsub_looper_intf" then
+    if not cfg.status.restarted and vlc.config.get("lua-intf") == "psm_looper_intf" then
         create_dialog_restart()
         return
     end
-    if vlc.config.get("lua-intf") ~= "slowsub_looper_intf" then
+    if vlc.config.get("lua-intf") ~= "psm_looper_intf" then
         create_dialog_enable_extension()
         return
     end
@@ -167,7 +167,7 @@ end
 
 function enable_extension()
     vlc.config.set("extraintf", "luaintf")
-    vlc.config.set("lua-intf", "slowsub_looper_intf")
+    vlc.config.set("lua-intf", "psm_looper_intf")
     cfg.status.restarted = false
     save_config(cfg)
     dlg:hide()
