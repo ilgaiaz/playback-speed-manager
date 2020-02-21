@@ -3,7 +3,7 @@
 It was initially developed with the purpose to facilitating a user with the listening of a new language by reducing the speed during a dialogue.  
 It was later modified to use it as the extension [Time Saver](https://addons.videolan.org/content/show.php?content=169314) (that is no more available on VLC 3.0).
 
-So now this VLC's Addons give the possibility to :
+So now this VLC Addon give the possibility to :
 
 1. Set the speed of the video when there are no subtitles.
 2. Set the speed of the video when a subtitle is shown on the screen.
@@ -84,3 +84,9 @@ Below is possible to see a preview of the interface.
 ![EnableInterface](img/enable_int.png)
 
 ![Interface](img/interface.png)
+
+# Authors
+Michele Gaiarin  ([gaiazdev@gmail.com](gaiazdev@gmail.com)), Simone Gaiarin ([simgunz@gmail.com](simgunz@gmail.com))
+
+# License
+This extension is released under the [GNU General Public License (GPLv3)](https://www.gnu.org/licenses/gpl-3.0.html)
